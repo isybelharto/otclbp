@@ -36,6 +36,18 @@ There is no backend, real authentication, database, bank integration, blockchain
 └── README.md
 ```
 
+## Separate role modules
+
+The public landing page is `dist/index.html`. Five role modules are independent HTML entry points and are designed for later DNS mapping to separate private subdomains:
+
+- `dist/management.html` — Management / Super Admin
+- `dist/otc-desk.html` — OTC Desk Trader
+- `dist/treasury.html` — Finance / Treasury
+- `dist/compliance.html` — Compliance / AML
+- `dist/corporate-client.html` — Corporate Client
+
+They share `dist/modules.css` and `dist/modules.js` only for a consistent visual system and synthetic demo data. They do not share session state or production access controls.
+
 ## Local use
 
 Open `dist/index.html` in a modern browser, or serve the `dist/` directory from any static file server. The application has no installation step and no environment variables.
