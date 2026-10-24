@@ -1,5 +1,6 @@
 /* LBP: static presentation and user-reviewed email preparation. No trading or server submission. */
 (()=>{'use strict';
+const institutionalTheme=document.createElement('link');institutionalTheme.rel='stylesheet';institutionalTheme.href=new URL('../css/institutional.css',document.currentScript.src).href;document.head.append(institutionalTheme);
 const $=selector=>document.querySelector(selector);
 const dictionary=JSON.parse($('#locale-data')?.textContent||'{}');
 const t=text=>dictionary[text]||text;
