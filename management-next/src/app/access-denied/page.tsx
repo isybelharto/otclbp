@@ -1,0 +1,3 @@
+export default function AccessDeniedPage() {
+  return <main className="grid min-h-screen place-items-center bg-slate-50 p-5"><section className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-7 text-center shadow-sm"><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-red-700">Access restricted</p><h1 className="mt-2 text-2xl font-bold">Management access is not available</h1><p className="mt-3 text-sm leading-6 text-slate-500">This account does not have an active Management / Super Admin role.</p><form action="/auth/signout" method="post" className="mt-6"><button className="rounded-md bg-[#1e40af] px-4 py-2.5 text-sm font-bold text-white">Return to sign in</button></form></section></main>;
+}
