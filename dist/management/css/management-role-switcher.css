@@ -1,0 +1,19 @@
+.role-switcher{border:0;background:transparent;color:#0f172a;cursor:pointer;font:700 13px Inter}
+.role-switcher .fi{color:#64748b;font-size:14px}
+.role-dialog{width:min(1120px,100%);padding:0}
+.role-dialog .dialog-head{padding:20px 22px;border-bottom:1px solid #e2e8f0}
+.role-dialog .dialog-head .sub{margin:5px 0 0}
+.role-current{display:flex;align-items:end;justify-content:space-between;gap:16px;padding:16px 22px;border-bottom:1px solid #e2e8f0;background:#fbfdff}
+.role-current label{display:grid;gap:7px;color:#526987;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.role-current select{min-width:235px;height:40px;text-transform:none;letter-spacing:0}
+.role-current span{color:#64748b;font-size:11px}
+.role-matrix{width:100%;border-collapse:collapse;font-size:12px}
+.role-matrix th{padding:12px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#526987;font-size:10px;font-weight:800;letter-spacing:.065em;text-align:center;white-space:nowrap}
+.role-matrix th:first-child,.role-matrix td:first-child{text-align:left}
+.role-matrix td{padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:center;white-space:nowrap}
+.role-matrix td:first-child{color:#0f172a;font-size:14px;font-weight:600}
+.role-matrix tbody tr:last-child td{border-bottom:0}
+.role-active-col{background:#eff6ff!important}
+.role-access-yes{color:#059669;font-size:17px;font-weight:700}
+.role-access-none{color:#94a3b8;font-size:14px}
+@media(max-width:700px){.role-current{align-items:stretch;flex-direction:column}.role-current select{min-width:0}.role-matrix th,.role-matrix td{padding:10px 12px}.role-dialog .dialog-head{padding:17px}.role-current{padding:14px 17px}}

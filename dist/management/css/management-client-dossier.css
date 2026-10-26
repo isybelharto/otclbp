@@ -1,0 +1,22 @@
+.client-dossier-dialog{max-width:830px}
+.client-dossier-dialog .dialog-head{padding:19px 26px}
+.client-dossier-dialog .dialog-head h2{font-size:16px}
+.client-dossier-content{padding:26px}
+.dossier-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:22px}
+.dossier-kpis>div{min-height:106px;border:1px solid #dce5f0;border-radius:15px;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.06);padding:20px}
+.dossier-kpis label{display:block;color:#526987;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.dossier-kpis strong{display:block;margin-top:16px;color:#1e40af;font-family:var(--mono);font-size:22px;font-variant-numeric:tabular-nums}
+.dossier-kpis strong.report-negative{color:#dc2626}
+.dossier-facts{margin:0}
+.dossier-facts>div{display:grid;grid-template-columns:190px 1fr;align-items:center;min-height:46px;border-bottom:1px solid #e2e8f0}
+.dossier-facts dt{color:#526987;font-size:11px;font-weight:800;letter-spacing:.065em;text-transform:uppercase}
+.dossier-facts dd{margin:0;color:#0f172a;font-size:14px}
+.dossier-transactions{margin-top:26px}
+.dossier-transactions h3{margin:0 0 9px;color:#526987;font-size:12px;font-weight:800;letter-spacing:.065em;text-transform:uppercase}
+.dossier-transactions table{width:100%;border-collapse:collapse}
+.dossier-transactions th{padding:11px 14px;background:#f4f7fb;color:#526987;font-size:10px;font-weight:800;letter-spacing:.07em;text-align:left}
+.dossier-transactions td{padding:11px 14px;border-bottom:1px solid #e2e8f0;font-size:12px}
+.dossier-tx,.dossier-amount{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dossier-tx{color:#1e40af}
+.dossier-amount{color:#0f172a}
+@media(max-width:640px){.client-dossier-content{padding:18px}.dossier-kpis{grid-template-columns:1fr}.dossier-facts>div{grid-template-columns:1fr;gap:5px;padding:11px 0}.dossier-transactions{overflow:auto;max-width:100%}.dossier-transactions table{min-width:560px}}

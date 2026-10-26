@@ -21,8 +21,8 @@ The application surface uses near-white and white (`#F8FAFC` / `#FFFFFF`) with s
 
 ## Typography and numbers
 
-- **Manrope** is the UI typeface for labels, controls, headings, and narrative text.
-- **IBM Plex Mono** is used for amounts, exchange rates, transaction IDs, wallet addresses, bank references, and blockchain hashes.
+- **Inter** is the single typeface for labels, controls, headings, financial values, identifiers, and narrative text across every page.
+- Financial values, transaction IDs, wallet addresses, bank references, and blockchain hashes use Inter with `font-variant-numeric: tabular-nums` for aligned figures.
 - Financial tables use tabular figures and compact spacing to support comparison.
 - Labels use uppercase, small-size, tracked lettering. Values remain larger, darker, and visually dominant.
 
@@ -54,7 +54,7 @@ Management navigation uses Flaticon UIcons (regular rounded style) through the F
 
 ### KPI cards
 
-KPI cards use white panels, fine slate borders, and mono values:
+KPI cards use white panels, fine slate borders, and tabular numeric values:
 
 - Total volume: financial blue
 - Fiat / Crypto IN: emerald
