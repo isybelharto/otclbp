@@ -238,4 +238,22 @@ const settingsDeskConfiguration=[
 function loadSettingRates(){try{const saved=JSON.parse(localStorage.getItem("lbp-management-asset-rates"));if(saved&&typeof saved==="object")Object.assign(settingsAssetRates,saved)}catch(error){}return settingsAssetRates}
 function saveSettingRates(){try{localStorage.setItem("lbp-management-asset-rates",JSON.stringify(settingsAssetRates))}catch(error){}}
 function settings(){const rates=loadSettingRates(),rateRows=Object.entries(rates).map(([asset,rate])=>`<tr><td class="settings-asset">${asset}</td><td><input class="settings-rate-input" type="number" min="0" step="${asset==="BTC"?"1000":"1"}" value="${rate}" data-rate-asset="${asset}" aria-label="${asset} IDR exchange rate"></td><td class="settings-equivalent" id="settings-equivalent-${asset}">${money(Number(rate))}</td></tr>`).join(""),deskRows=settingsDeskConfiguration.map(desk=>`<tr><td class="settings-desk">${desk.desk}</td><td>${desk.operator}</td><td class="settings-money">${money(desk.buy)}</td><td class="settings-money">${money(desk.sell)}</td><td class="settings-money">${desk.spread}</td><td class="settings-money">${desk.fee}</td></tr>`).join("");let defaultLanguage="English";try{defaultLanguage=localStorage.getItem("lbp-management-default-language")||"English"}catch(error){}view.innerHTML=title("Settings","OTC Brokerage & Institutional Settlement")+`<section class="card settings-card settings-rates"><header><h2>Exchange Rate Table (configurable)</h2></header><div class="table-wrap"><table><thead><tr><th>Asset</th><th>IDR</th><th>IDR Equivalent</th></tr></thead><tbody>${rateRows}</tbody></table></div></section><section class="card settings-card settings-desks"><header><h2>OTC Desk Configuration</h2><p>Every price/spread change is recorded with timestamp and operator. History is never overwritten.</p></header><div class="table-wrap"><table><thead><tr><th>Desk</th><th>Operator</th><th>Buy Price</th><th>Sell Price</th><th>Spread %</th><th>Fee %</th></tr></thead><tbody>${deskRows}</tbody></table></div></section><section class="card settings-card settings-language"><header><h2>Default Language</h2></header><label>Default language<select id="settings-default-language"><option ${defaultLanguage==="English"?"selected":""}>English</option><option ${defaultLanguage==="Bahasa Indonesia"?"selected":""}>Bahasa Indonesia</option></select></label></section>`;document.querySelectorAll("[data-rate-asset]").forEach(input=>input.oninput=event=>{const asset=event.currentTarget.dataset.rateAsset,value=Number(event.currentTarget.value);if(Number.isFinite(value)&&value>=0){settingsAssetRates[asset]=value;document.querySelector(`#settings-equivalent-${asset}`).textContent=money(value);saveSettingRates()}});document.querySelector("#settings-default-language").onchange=event=>{try{localStorage.setItem("lbp-management-default-language",event.target.value)}catch(error){}}}function render(name){document.querySelectorAll(".nav").forEach(n=>n.classList.toggle("active",n.dataset.view===name));({dashboard,ledger:ledgerView,fiat:fiatView,crypto:cryptoView,clients:clientsView,desks:deskView,reports, aum,reconciliation:reconciliationView,compliance:kycMonitoringView,exports:exportsView,audit:auditTrailView,settings})[name]()}
-document.querySelectorAll(".nav").forEach(n=>n.onclick=()=>render(n.dataset.view));render("dashboard");
+document.querySelectorAll(".nav").forEach(n=>n.onclick=()=>render(n.dataset.view));
+
+function showDataLoadError(error){
+  console.error("Unable to load the Supabase Management ledger.",error);
+  view.innerHTML=title("Management data unavailable","The dashboard could not load its governed ledger.")+`<section class="card section"><h2>Supabase connection required</h2><p class="sub">The authenticated account could not read transaction data. Check the Supabase connection and Row Level Security policy, then refresh this page.</p></section>`;
+}
+
+async function bootstrapManagementLedger(){
+  try{
+    const liveLedger=await window.LBPManagementData.loadTransactions();
+    ledger.splice(0,ledger.length,...liveLedger);
+    render("dashboard");
+  }catch(error){
+    ledger.splice(0,ledger.length);
+    showDataLoadError(error);
+  }
+}
+
+window.LBPManagementAuth.ready.then(bootstrapManagementLedger).catch(showDataLoadError);
