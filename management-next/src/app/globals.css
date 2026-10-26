@@ -1,8 +1,0 @@
-@import "tailwindcss";
-
-:root { --background: #fcfdfe; --foreground: #0f172a; --card: #fff; --primary: #1e40af; --primary-deep: #0f1e3d; --accent: #059669; --muted: #f1f5f9; --muted-foreground: #64748b; --border: #e2e8f0; }
-* { box-sizing: border-box; }
-html { background: var(--background); }
-body { margin: 0; background: var(--background); color: var(--foreground); font-family: Manrope, ui-sans-serif, system-ui, sans-serif; }
-button, input, select { font: inherit; }
-.font-mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }

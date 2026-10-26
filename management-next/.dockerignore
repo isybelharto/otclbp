@@ -1,8 +1,0 @@
-.git
-.next
-.next-build
-node_modules
-.env*
-*.log
-README.md
-tsconfig.tsbuildinfo

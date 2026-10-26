@@ -1,6 +1,0 @@
-# Add this site block to the VPS file /etc/caddy/Caddyfile.
-# Do not replace existing site blocks already used by other applications.
-management.ptlbp.co.id {
-  encode zstd gzip
-  reverse_proxy 127.0.0.1:3000
-}
