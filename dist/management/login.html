@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>LBP OTC Management — Sign in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { color: #0f172a; font-family: Inter, Arial, sans-serif; background: #0f1e3d; }
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; background: linear-gradient(135deg, #0f1e3d, #1e40af 58%, #3156b9); }
+    main { width: min(100%, 430px); padding: 32px; border: 1px solid rgba(255,255,255,.25); border-radius: 18px; background: #fff; box-shadow: 0 24px 60px rgba(8,22,55,.3); }
+    .brand { display: flex; gap: 12px; align-items: center; font-size: 15px; font-weight: 800; letter-spacing: .02em; }
+    .brand img { width: 42px; height: 42px; object-fit: contain; }
+    .brand small { display: block; margin-top: 3px; color: #64748b; font-size: 10px; letter-spacing: .12em; }
+    .eyebrow { margin: 32px 0 8px; color: #1e40af; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -.03em; }
+    p { color: #64748b; font-size: 14px; line-height: 1.6; }
+    form { display: grid; gap: 16px; margin-top: 26px; }
+    label { color: #334155; display: grid; gap: 7px; font-size: 13px; font-weight: 700; }
+    input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; outline: none; }
+    input:focus { border-color: #1e40af; box-shadow: 0 0 0 3px #dbeafe; }
+    button { border: 0; border-radius: 8px; padding: 13px; background: #1e40af; color: #fff; cursor: pointer; font: inherit; font-weight: 800; }
+    button:hover { background: #17348d; }
+    #message { min-height: 20px; margin: 0; color: #b91c1c; font-size: 13px; }
+    footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><img src="assets/lbp-crypto-fiat-logo.png" alt="LBP"><div>PT LINTAS BATAS<small>PEMBAYARAN · OTC</small></div></div>
+    <div class="eyebrow">Secure Management Access</div>
+    <h1>Sign in to LBP OTC</h1>
+    <p>Use your approved institutional email and password.</p>
+    <form id="login-form">
+      <label>Email<input id="email" type="email" autocomplete="email" required></label>
+      <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+      <p id="message" role="alert"></p>
+      <button type="submit">Sign In</button>
+    </form>
+    <footer>Access is limited to active Management / Super Admin profiles.</footer>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/supabase-auth.js"></script>
+  <script>
+    const form = document.querySelector("#login-form");
+    const message = document.querySelector("#message");
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "unauthorized") message.textContent = "Your account is not authorised for Management access.";
+    if (params.get("error") === "authorization") message.textContent = "We could not verify your Management access.";
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.textContent = "";
+      const button = form.querySelector("button");
+      button.disabled = true;
+      button.textContent = "Signing in…";
+      try {
+        const email = document.querySelector("#email").value.trim();
+        const password = document.querySelector("#password").value;
+        const result = await window.LBPManagementAuth.signIn(email, password);
+        const profile = await window.LBPManagementAuth.getManagementProfile(result.user.id);
+        if (!profile || profile.role !== "management" || !profile.is_active) {
+          await window.LBPManagementAuth.signOut();
+          throw new Error("Your account is not authorised for Management access.");
+        }
+        window.location.replace(window.LBPManagementAuth.dashboardUrl());
+      } catch (error) {
+        message.textContent = error.message || "Sign-in failed. Please try again.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Sign In";
+      }
+    });
+  </script>
+</body>
+</html>
