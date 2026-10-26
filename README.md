@@ -1,6 +1,6 @@
 # PT Lintas Batas Pembayaran — OTC Brokerage Platform
 
-Static front-end prototype of an institutional OTC brokerage and settlement operating interface for PT Lintas Batas Pembayaran (LBP).
+Institutional OTC brokerage and settlement interface for PT Lintas Batas Pembayaran (LBP). The public site remains static; the Management console can use Supabase Authentication and database reads when its browser configuration is present.
 
 > **Important:** This is not a production trading, custody, payments, KYC/AML, or settlement system. All figures, counterparties, wallet addresses, transaction hashes, roles, and reports are synthetic demonstration data. Do not use the interface or its output as financial, liquidity, compliance, or settlement evidence.
 
@@ -8,7 +8,7 @@ Static front-end prototype of an institutional OTC brokerage and settlement oper
 
 - Public institutional landing page grouped in `dist/landing-page/`.
 - Management / Super Admin console for dashboard, master ledger, Fiat Ledger, Crypto Ledger, desks, clients, AUM, reconciliation, compliance, exports, audit, and settings.
-- One synthetic master transaction ledger powering the Management dashboard and ledger views.
+- A Management data adapter that reads the transaction ledger and operational modules from Supabase while preserving the established HTML design.
 - Clickable TX IDs that open a transaction-detail modal with settlement, compliance, bank, wallet, token/network, and operator data.
 - Unified transaction treatment: IN is green, OUT is red, and settlement, KYC, and AML states are separate status badges.
 - Collapsible Management sidebar with icon-only mode, browser-local preference storage, and Flaticon UIcons attribution.
@@ -16,14 +16,14 @@ Static front-end prototype of an institutional OTC brokerage and settlement oper
 
 ## Technology
 
-This version is deliberately buildless for simple static hosting:
+The public site and Management console are deliberately buildless for simple static hosting:
 
 - HTML, CSS, and browser JavaScript
-- Browser JavaScript and local synthetic data
+- Browser JavaScript, Supabase JS client, and seeded data during the migration phase
 - Flaticon UIcons loaded through the CDN for Management navigation
 - `localStorage` for Management sidebar display preference
 
-There is no backend, real authentication, database, bank integration, blockchain connection, executable price feed, or server-side authorization.
+The static Management console supports Supabase email/password authentication and management-role checks. It does not provide bank integration, blockchain execution, an executable price feed, or server-side trading/settlement controls.
 
 ## Repository layout
 
@@ -40,7 +40,7 @@ There is no backend, real authentication, database, bank integration, blockchain
 │   │   ├── index.html
 │   │   ├── assets/
 │   │   ├── css/
-│   │   └── js/
+│   │   └── js/                 # Auth and Supabase data adapters
 │   ├── management.html         # Compatibility redirect to management/
 │   ├── otc-desk.html           # OTC Desk Trader module
 │   ├── treasury.html           # Finance / Treasury module
@@ -59,17 +59,33 @@ The public landing page is available through `dist/index.html` and is implemente
 - `dist/compliance.html` — Compliance / AML
 - `dist/corporate-client.html` — Corporate Client
 
-The Management module is self-contained in `dist/management/`, with all of its stylesheet, JavaScript, and image resources held under `css/`, `js/`, and `assets/`. The legacy `dist/management.html` path remains as a redirect. The modules do not share session state or production access controls.
+The Management module is self-contained in `dist/management/`, with all of its stylesheet, JavaScript, and image resources held under `css/`, `js/`, and `assets/`. The legacy `dist/management.html` path remains as a redirect. Management authenticates users through Supabase when `supabase-config.js` is configured; other role modules remain static prototypes until their access controls are implemented.
+
+## Supabase-backed Management data
+
+`dist/management/js/supabase-auth.js` limits access to active `management` profiles. `dist/management/js/supabase-data.js` reads the following tables and maps them into the existing Management UI without changing its visual design:
+
+- `transactions` → Dashboard, Transaction Ledger, Reports
+- `fiat_legs` → Fiat Ledger
+- `crypto_legs` → Crypto Ledger
+- `clients` → B2B / Corporate Clients and KYC register
+- `partner_quotes` → OTC Partner Desk
+- `bank_accounts`, `crypto_wallets`, `asset_rates` → AUM / Managed Assets
+- `reconciliation_entries` → Reconciliation
+- `aml_alerts` → KYC / AML monitoring
+- `audit_events` → Audit Trail
+
+This is currently a read integration. Price edits, reconciliation actions, export actions, and settlement actions must not be treated as production writes or execution instructions until governed server-side workflows are implemented.
 
 ## Local use
 
-Open `dist/index.html` in a modern browser, or serve the `dist/` directory from any static file server. The application has no installation step and no environment variables. For example:
+Open `dist/index.html` in a modern browser, or serve the `dist/` directory from any static file server. For local static preview:
 
 ```bash
 python -m http.server 4173 --directory dist
 ```
 
-Then use `http://localhost:4173/` for the landing page or `http://localhost:4173/management/` for the Management console.
+Then use `http://localhost:4173/` for the landing page or `http://localhost:4173/management/` for the Management console. For authenticated Management access, serve the configured `dist/management/` files over HTTPS and configure Supabase Authentication with the corresponding site URL and redirect URL.
 
 ## Design and update notes
 
