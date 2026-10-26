@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 
+// The dashboard is session-specific and reads the ledger at request time.
+// It must not be statically prerendered during the production Docker build.
+export const instant = false;
+
 function rupiah(value: number) {
   return new Intl.NumberFormat("en-ID", { maximumFractionDigits: 2, notation: "compact", compactDisplay: "short" }).format(value);
 }

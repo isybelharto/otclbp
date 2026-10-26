@@ -2,6 +2,10 @@ import { ManagementShell } from "@/components/management-shell";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
+// Authentication depends on the request cookie, so this protected segment
+// renders only after the request reaches the server.
+export const instant = false;
+
 export default async function ManagementLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
