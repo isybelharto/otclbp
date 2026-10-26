@@ -154,6 +154,8 @@
       spread: String(first(row, ["spread_percent", "spread"], 0)),
       fee: String(first(row, ["fee_percent", "fee"], 0)),
       status: titleCase(first(row, ["status"], "configured")),
+      operator: first(row, ["operator_name", "operator", "updated_by"], "Partner Operations"),
+      lastUpdated: formatDate(first(row, ["updated_at", "quoted_at", "created_at"])),
       liquidity: {
         usdt: number(first(row, ["available_usdt", "usdt_available", "liquidity_usdt"])),
         idr: number(first(row, ["available_idr", "idr_available", "liquidity_idr"])),
