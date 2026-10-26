@@ -16,7 +16,7 @@ This application is deployed as one private Docker container. Caddy remains on t
 2. Create the production environment file. Use the Supabase project URL and **publishable** key. Do not use a service-role key.
 
    ```bash
-   cp .env.production.example .env.production
+   cp env.production.example .env.production
    nano .env.production
    ```
 
