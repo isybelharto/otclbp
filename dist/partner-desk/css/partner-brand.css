@@ -1,0 +1,63 @@
+/* Shared LBP logo and institutional access-screen rules. */
+.partner-brand-logo {
+  display: block;
+  width: 112px;
+  height: 36px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.partner-auth-brand .partner-brand-logo {
+  width: 132px;
+  height: 44px;
+}
+
+.partner-auth-body {
+  background: #f8fafc;
+}
+
+.partner-auth-card {
+  border-top: 3px solid var(--blue);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.partner-auth-card .partner-card-head {
+  background: #fff;
+}
+
+.partner-auth-form input,
+.partner-auth-form select {
+  border-color: #e2e8f0;
+  border-radius: 7px;
+}
+
+.partner-auth-form .partner-config-save {
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.partner-auth-form .partner-config-save:hover {
+  background: #173891;
+}
+
+.partner-auth-links a:hover,
+.partner-auth-links button:hover,
+.partner-auth-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 680px) {
+  .partner-brand-logo {
+    width: 92px;
+    height: 32px;
+  }
+
+  .partner-auth-brand .partner-brand-logo {
+    width: 112px;
+    height: 38px;
+  }
+
+  .partner-auth-brand strong {
+    font-size: 11px;
+  }
+}

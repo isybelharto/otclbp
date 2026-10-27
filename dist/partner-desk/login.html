@@ -4,11 +4,12 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>LBP OTC Partner Desk Access</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/partner-desk.css?v=20261027-access">
+  <link rel="stylesheet" href="css/partner-desk.css?v=20261027-brand">
+  <link rel="stylesheet" href="css/partner-brand.css?v=20261027-brand">
 </head>
 <body class="partner-auth-body">
   <main class="partner-auth-shell">
-    <section class="partner-auth-brand"><span class="partner-brand-mark">LBP</span><div><strong>PT LINTAS BATAS PEMBAYARAN</strong><small>OTC PARTNER DESK</small></div></section>
+    <section class="partner-auth-brand"><img class="partner-brand-logo" src="../management/assets/lbp-crypto-fiat-logo.png" alt="PT Lintas Batas Pembayaran"><div><strong>PT LINTAS BATAS PEMBAYARAN</strong><small>OTC PARTNER DESK</small></div></section>
     <section class="partner-card partner-auth-card">
       <header class="partner-card-head"><div><span class="partner-eyebrow">Secure institutional access</span><h1>Sign in to Partner Desk</h1><p>Use the company email approved by LBP Management.</p></div></header>
       <form id="partner-login-form" class="partner-auth-form">
@@ -23,7 +24,7 @@
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/partner-desk-supabase.js?v=20261027-access"></script>
+  <script src="js/partner-desk-supabase.js?v=20261027-brand"></script>
   <script>
     const status=document.querySelector('#partner-login-status'),query=new URLSearchParams(location.search);
     if(query.get('verified')){status.textContent='Email verified. Your request remains subject to Management approval.';status.className='partner-auth-status success'}

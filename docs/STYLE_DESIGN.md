@@ -19,6 +19,14 @@ This document defines the visual and interaction system for the PT Lintas Batas 
 
 The application surface uses near-white and white (`#F8FAFC` / `#FFFFFF`) with subtle shadows only. Do not use gradients, high-gloss effects, or visual decoration that competes with settlement data.
 
+## Logo usage
+
+- Use the approved crypto-to-fiat LBP logo asset at `dist/management/assets/lbp-crypto-fiat-logo.png` consistently across Management and Partner Desk pages.
+- Do not replace the approved logo with a typed `LBP`, currency symbol, emoji, landmark icon, or a differently styled logo.
+- Preserve the logo aspect ratio with `object-fit: contain`; never stretch, crop, recolor, rotate, or add effects.
+- The full logo uses a minimum displayed width of 92px on compact screens and 112px on desktop surfaces.
+- Place the logo on white or near-white surfaces with adequate clear space. Supporting module text may appear beside it but must not overlap the mark.
+
 ## Typography and numbers
 
 - **Inter** is the single typeface for labels, controls, headings, financial values, identifiers, and narrative text across every page.
@@ -45,6 +53,16 @@ management/
 ```
 
 The left navigation uses deep navy. Its default width is 256px; users can collapse it to an icon-only 72px rail. The selected item has a restrained white overlay and emerald edge marker. The collapse preference is retained only in the local browser.
+
+### Partner Desk and access pages
+
+- Partner Desk uses the same Inter typography, blue/emerald/slate palette, approved LBP logo, borders, radii, and status colors as Management.
+- Login, registration, forgot-password, and reset-password pages use a near-white page surface and one white bordered card. Avoid decorative gradients and heavy shadows.
+- Form controls use 44px minimum height, visible labels, slate borders, 7px radius, and a blue focus ring.
+- The primary submit action is financial blue. Links and secondary actions remain blue text or white bordered controls.
+- Registration may use two columns on desktop but must become one column on narrow screens. Password requirements remain visible and turn emerald only when satisfied.
+- Account and approval messages use the established status mapping: pending/review is amber, approved/active is emerald, and rejected/error is red.
+- Authentication pages must not expose whether an unverified email exists. Recovery confirmation uses neutral wording.
 
 ## Navigation icons
 

@@ -61,7 +61,7 @@
     app.innerHTML = `
       <header class="partner-top">
         <a class="partner-brand" href="./" aria-label="LBP OTC Partner Desk">
-          <span class="partner-brand-mark">LBP</span>
+          <img class="partner-brand-logo" src="../management/assets/lbp-crypto-fiat-logo.png" alt="PT Lintas Batas Pembayaran">
           <span>PT LINTAS BATAS<small>PARTNER OTC DESK</small></span>
         </a>
         <div class="partner-top-actions">
