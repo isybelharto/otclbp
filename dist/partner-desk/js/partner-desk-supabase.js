@@ -4,7 +4,7 @@
   const url = "https://biwwfxfpcsanszxrxhyw.supabase.co";
   const publishableKey = "sb_publishable_sB3GSSdJi477vhQAmjABnw_DT4sknEb";
   const productionPartnerUrl = "https://management.ptlbp.co.id/partner-desk/";
-  const client = window.supabase.createClient(url, publishableKey, { auth: { persistSession: true, autoRefreshToken: true } });
+  const client = window.supabase.createClient(url, publishableKey, { auth: { storageKey: "lbp-partner-desk-auth-v1", persistSession: true, autoRefreshToken: true } });
   const text = (value, fallback = "") => value === null || value === undefined ? fallback : String(value);
   const authRedirect = (path) => new URL(path, productionPartnerUrl).href;
 

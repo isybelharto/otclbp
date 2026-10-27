@@ -23,7 +23,7 @@
   <div id="partner-otp-security" class="partner-otp-security">For your security, never share this PIN. PT LBP will never ask for your password or verification PIN by telephone or chat.</div>
 </section>
 <footer class="partner-auth-footer">Already registered? <a href="login.html">Return to sign in</a></footer></section></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/partner-desk-supabase.js?v=20261027-email-otp"></script><script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/partner-desk-supabase.js?v=20261027-partner-access-refresh"></script><script>
 const registerForm=document.querySelector('#partner-register-form'),otpPanel=document.querySelector('#partner-otp-panel'),otpForm=document.querySelector('#partner-otp-form'),otpCode=document.querySelector('#partner-otp-code'),otpDestination=document.querySelector('#partner-otp-destination'),resendButton=document.querySelector('#partner-otp-resend'),password=document.querySelector('#registration-password'),confirmation=document.querySelector('#registration-password-confirm'),registerStatus=document.querySelector('#partner-register-status'),otpStatus=document.querySelector('#partner-otp-status'),pendingEmailKey='lbp_partner_pending_email';
 let pendingEmail=sessionStorage.getItem(pendingEmailKey)||'',resendTimer;
 function showRules(){const value=password.value,rules={length:value.length>=8,capital:/[A-Z]/.test(value),special:/[^A-Za-z0-9]/.test(value),repeat:!/(.)\1\1/i.test(value),match:value.length>0&&value===confirmation.value};Object.entries(rules).forEach(([key,valid])=>document.querySelector(`[data-rule="${key}"]`).classList.toggle('valid',valid))}

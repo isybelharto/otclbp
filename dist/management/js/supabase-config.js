@@ -12,6 +12,7 @@
   // protected by Supabase Row Level Security; never add a service-role key here.
   window.LBPSupabase = window.supabase.createClient(url, publishableKey, {
     auth: {
+      storageKey: "lbp-management-auth-v1",
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
