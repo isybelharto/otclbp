@@ -94,8 +94,9 @@ Supabase sends a six-digit OTP when the **Confirm signup** email template uses t
 1. Open **Supabase Dashboard → Authentication → Email Templates → Confirm signup**.
 2. Set the subject to `Your LBP Partner Desk verification PIN`.
 3. Use `{{ .Token }}` in the email body to display the PIN. Do not use `{{ .ConfirmationURL }}` in this template, because that produces a verification link instead.
-4. Under **Authentication → Providers → Email**, set **Email OTP Expiration** to the desired validity period; `600` seconds is recommended.
-5. Save the settings and test with a new company-email registration. Existing unverified registrations can request another PIN from the registration screen.
+4. Under **Authentication → Sign In / Providers → Email**, set **Email OTP Length** to `6`. The application deliberately accepts exactly six digits, so this project setting must not remain at `8`.
+5. Set **Email OTP Expiration** to the desired validity period; `600` seconds is recommended.
+6. Save the settings and test with a new company-email registration. Existing unverified registrations can request another PIN from the registration screen.
 
 Minimal template body:
 
