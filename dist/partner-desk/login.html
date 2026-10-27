@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>LBP OTC Partner Desk Access</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/partner-desk.css">
+</head>
+<body>
+  <main class="partner-page" style="max-width:560px;padding-top:10vh">
+    <section class="partner-card partner-section">
+      <header class="partner-card-head"><div><h1>Secure Partner Desk Access</h1><p>Sign in with the approved exchange partner email.</p></div></header>
+      <form id="partner-login-form" class="partner-config-fields" style="padding:24px">
+        <label>Email<input id="partner-email" type="email" required autocomplete="email"></label>
+        <label>Password<input id="partner-password" type="password" required autocomplete="current-password"></label>
+        <button class="partner-config-save" type="submit">Sign in to Partner Desk</button>
+        <p id="partner-login-error" role="alert"></p>
+      </form>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/partner-desk-supabase.js"></script>
+  <script>
+    document.querySelector('#partner-login-form').addEventListener('submit', async event => {
+      event.preventDefault(); const error=document.querySelector('#partner-login-error'); error.textContent='';
+      const { error: signInError }=await window.LBPPartnerDeskSupabase.client.auth.signInWithPassword({email:document.querySelector('#partner-email').value,password:document.querySelector('#partner-password').value});
+      if(signInError){error.textContent=signInError.message;return} const access=await window.LBPPartnerDeskSupabase.sessionProfile();
+      if(!access){await window.LBPPartnerDeskSupabase.client.auth.signOut();error.textContent='This account has no active Partner Desk or Management access.';return} location.replace('./');
+    });
+  </script>
+</body>
+</html>

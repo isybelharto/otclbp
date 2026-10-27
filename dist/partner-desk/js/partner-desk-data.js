@@ -19,5 +19,6 @@
   const persist=()=>{try{localStorage.setItem(storageKey,JSON.stringify(state))}catch(error){}};
   const getPartner=id=>state.partners.find(partner=>partner.id===id);
   const updatePartner=(id,changes)=>{const partner=getPartner(id);if(!partner)return null;Object.assign(partner,changes);partner.lastUpdated=new Intl.DateTimeFormat("en-GB",{dateStyle:"medium",timeStyle:"short"}).format(new Date())+" WIB";const today=partner.priceHistory[0];partner.priceHistory[0]={...today,date:dateFor(0),buy:Number(partner.buy),sell:Number(partner.sell),spread:String(partner.spread),fee:String(partner.fee),available:partner.liquidity.usdt,status:"Current"};persist();return partner};
-  window.LBPPartnerDeskStore={getPartners:()=>state.partners,getPartner,updatePartner,persist,reset:()=>{state={partners:defaults()};persist();return state.partners}};
+  const setPartners=partners=>{if(Array.isArray(partners)&&partners.length){state={partners};persist()}return state.partners};
+  window.LBPPartnerDeskStore={getPartners:()=>state.partners,getPartner,updatePartner,persist,setPartners,reset:()=>{state={partners:defaults()};persist();return state.partners}};
 })();
