@@ -164,13 +164,39 @@
     };
   }
 
-  function mapPartnerDesk(desk, quotes) {
+  function sumPartnerSettlements(rows, partnerId, assetKey) {
+    return (rows || [])
+      .filter((item) => String(item.partner_id) === String(partnerId) && String(item.status || "").toLowerCase() === "settled")
+      .reduce((totals, item) => {
+        const asset = String(item[assetKey] || (assetKey === "currency" ? "IDR" : "USDT")).toUpperCase();
+        totals[asset] = (totals[asset] || 0) + number(item.amount);
+        return totals;
+      }, {});
+  }
+
+  function mapPartnerDesk(desk, quotes, wallets, fiatSettlements, cryptoSettlements) {
     const quote = quotes.filter((item) => String(item.partner_id) === String(desk.id)).sort((a, b) => new Date(b.quoted_at) - new Date(a.quoted_at))[0] || {};
+    const partnerWallet = (wallets || []).find((item) => String(item.partner_id) === String(desk.id) && String(item.status || "").toLowerCase() === "active")
+      || (wallets || []).find((item) => String(item.partner_id) === String(desk.id))
+      || {};
     return {
       id: String(desk.id), name: first(desk, ["display_name", "name"], "Exchange partner"), buy: String(number(quote.buy_price)), sell: String(number(quote.sell_price)),
       spread: String(number(quote.spread_percent)), fee: String(number(quote.fee_percent)), status: titleCase(first(desk, ["status"], "active")),
       operator: first(desk, ["operator_name"], "Partner Operations"), lastUpdated: formatDate(first(quote, ["quoted_at"], first(desk, ["updated_at"]))),
-      liquidity: { usdt: number(quote.available_usdt), idr: number(quote.available_idr) }, summary: { transactions: 0, volume: 0, revenue: 0, netFlow: 0 },
+      liquidity: {
+        usdt: number(quote.available_usdt),
+        usdc: number(quote.available_usdc),
+        btc: number(quote.available_btc),
+        idr: number(quote.available_idr),
+      },
+      wallet: {
+        asset: first(partnerWallet, ["asset"], "—"),
+        network: first(partnerWallet, ["network"], "—"),
+        address: first(partnerWallet, ["address_masked", "wallet_address", "address"], ""),
+      },
+      settledFiat: sumPartnerSettlements(fiatSettlements, desk.id, "currency"),
+      settledCrypto: sumPartnerSettlements(cryptoSettlements, desk.id, "asset"),
+      summary: { transactions: 0, volume: 0, revenue: 0, netFlow: 0 },
     };
   }
 
@@ -219,9 +245,10 @@
   }
 
   async function loadOperationsData() {
-    const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
+    const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
       optionalTable("transactions"), optionalTable("clients"), optionalTable("fiat_legs"), optionalTable("crypto_legs"),
-      optionalTable("partner_quotes"), optionalTable("partner_desks"), optionalTable("partner_desk_quotes"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
+      optionalTable("partner_quotes"), optionalTable("partner_desks"), optionalTable("partner_desk_quotes"), optionalTable("partner_desk_wallets"),
+      optionalTable("partner_desk_fiat_settlements"), optionalTable("partner_desk_crypto_settlements"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
       optionalTable("audit_events"), optionalTable("asset_rates"), optionalTable("bank_accounts"), optionalTable("crypto_wallets"),
     ]);
     const clientNames = new Map(clientRows.map((row) => [String(first(row, ["id", "client_id"])), first(row, ["entity_name", "client_name", "name", "legal_name"], "Institutional client")]));
@@ -233,7 +260,9 @@
       })),
       fiatLegs: fiatLegs.map((row) => mapLeg(row, clientNames, "fiat")),
       cryptoLegs: cryptoLegs.map((row) => mapLeg(row, clientNames, "crypto")),
-      partners: partnerDeskRows.length ? partnerDeskRows.map((desk) => mapPartnerDesk(desk, partnerDeskQuotes)) : partnerRows.map(mapPartner),
+      partners: partnerDeskRows.length
+        ? partnerDeskRows.map((desk) => mapPartnerDesk(desk, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto))
+        : partnerRows.map(mapPartner),
       bankReconciliation: reconciliationRows.map(mapReconciliation).filter((row) => row.scope !== "Wallet"),
       walletReconciliation: reconciliationRows.map(mapReconciliation).filter((row) => row.scope === "Wallet"),
       incidents: reconciliationRows.filter((row) => number(first(row, ["difference", "variance"])) !== 0).map((row) => ({

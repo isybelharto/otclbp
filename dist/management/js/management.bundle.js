@@ -1,4 +1,4 @@
-/* Source: dist/management/js/supabase-config.js */
+/* Source: dist\management\js\supabase-config.js */
 
 (function initialiseLbpSupabase() {
   "use strict";
@@ -22,9 +22,7 @@
 })();
 
 
-;
-
-/* Source: dist/management/js/supabase-auth.js */
+/* Source: dist\management\js\supabase-auth.js */
 
 (function initialiseLbpManagementAuth() {
   "use strict";
@@ -123,9 +121,7 @@
 })();
 
 
-;
-
-/* Source: dist/management/js/supabase-data.js */
+/* Source: dist\management\js\supabase-data.js */
 
 (function initialiseLbpManagementData() {
   "use strict";
@@ -293,13 +289,39 @@
     };
   }
 
-  function mapPartnerDesk(desk, quotes) {
+  function sumPartnerSettlements(rows, partnerId, assetKey) {
+    return (rows || [])
+      .filter((item) => String(item.partner_id) === String(partnerId) && String(item.status || "").toLowerCase() === "settled")
+      .reduce((totals, item) => {
+        const asset = String(item[assetKey] || (assetKey === "currency" ? "IDR" : "USDT")).toUpperCase();
+        totals[asset] = (totals[asset] || 0) + number(item.amount);
+        return totals;
+      }, {});
+  }
+
+  function mapPartnerDesk(desk, quotes, wallets, fiatSettlements, cryptoSettlements) {
     const quote = quotes.filter((item) => String(item.partner_id) === String(desk.id)).sort((a, b) => new Date(b.quoted_at) - new Date(a.quoted_at))[0] || {};
+    const partnerWallet = (wallets || []).find((item) => String(item.partner_id) === String(desk.id) && String(item.status || "").toLowerCase() === "active")
+      || (wallets || []).find((item) => String(item.partner_id) === String(desk.id))
+      || {};
     return {
       id: String(desk.id), name: first(desk, ["display_name", "name"], "Exchange partner"), buy: String(number(quote.buy_price)), sell: String(number(quote.sell_price)),
       spread: String(number(quote.spread_percent)), fee: String(number(quote.fee_percent)), status: titleCase(first(desk, ["status"], "active")),
       operator: first(desk, ["operator_name"], "Partner Operations"), lastUpdated: formatDate(first(quote, ["quoted_at"], first(desk, ["updated_at"]))),
-      liquidity: { usdt: number(quote.available_usdt), idr: number(quote.available_idr) }, summary: { transactions: 0, volume: 0, revenue: 0, netFlow: 0 },
+      liquidity: {
+        usdt: number(quote.available_usdt),
+        usdc: number(quote.available_usdc),
+        btc: number(quote.available_btc),
+        idr: number(quote.available_idr),
+      },
+      wallet: {
+        asset: first(partnerWallet, ["asset"], "—"),
+        network: first(partnerWallet, ["network"], "—"),
+        address: first(partnerWallet, ["address_masked", "wallet_address", "address"], ""),
+      },
+      settledFiat: sumPartnerSettlements(fiatSettlements, desk.id, "currency"),
+      settledCrypto: sumPartnerSettlements(cryptoSettlements, desk.id, "asset"),
+      summary: { transactions: 0, volume: 0, revenue: 0, netFlow: 0 },
     };
   }
 
@@ -348,9 +370,10 @@
   }
 
   async function loadOperationsData() {
-    const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
+    const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
       optionalTable("transactions"), optionalTable("clients"), optionalTable("fiat_legs"), optionalTable("crypto_legs"),
-      optionalTable("partner_quotes"), optionalTable("partner_desks"), optionalTable("partner_desk_quotes"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
+      optionalTable("partner_quotes"), optionalTable("partner_desks"), optionalTable("partner_desk_quotes"), optionalTable("partner_desk_wallets"),
+      optionalTable("partner_desk_fiat_settlements"), optionalTable("partner_desk_crypto_settlements"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
       optionalTable("audit_events"), optionalTable("asset_rates"), optionalTable("bank_accounts"), optionalTable("crypto_wallets"),
     ]);
     const clientNames = new Map(clientRows.map((row) => [String(first(row, ["id", "client_id"])), first(row, ["entity_name", "client_name", "name", "legal_name"], "Institutional client")]));
@@ -362,7 +385,9 @@
       })),
       fiatLegs: fiatLegs.map((row) => mapLeg(row, clientNames, "fiat")),
       cryptoLegs: cryptoLegs.map((row) => mapLeg(row, clientNames, "crypto")),
-      partners: partnerDeskRows.length ? partnerDeskRows.map((desk) => mapPartnerDesk(desk, partnerDeskQuotes)) : partnerRows.map(mapPartner),
+      partners: partnerDeskRows.length
+        ? partnerDeskRows.map((desk) => mapPartnerDesk(desk, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto))
+        : partnerRows.map(mapPartner),
       bankReconciliation: reconciliationRows.map(mapReconciliation).filter((row) => row.scope !== "Wallet"),
       walletReconciliation: reconciliationRows.map(mapReconciliation).filter((row) => row.scope === "Wallet"),
       incidents: reconciliationRows.filter((row) => number(first(row, ["difference", "variance"])) !== 0).map((row) => ({
@@ -383,9 +408,7 @@
 })();
 
 
-;
-
-/* Source: dist/partner-desk/js/partner-desk-data.js */
+/* Source: dist\partner-desk\js\partner-desk-data.js */
 
 (function(){
   const storageKey="lbp-otc-partner-desks-v1";
@@ -413,9 +436,7 @@
 })();
 
 
-;
-
-/* Source: dist/management/js/management-admin.js */
+/* Source: dist\management\js\management-admin.js */
 
 const ledger=[
  {id:"OTC-2026-0218",date:"24 Oct 2026 14:42",client:"Garuda Prima Capital",type:"Fiat → Crypto",asset:"USDT",fiatIn:46200000000,fiatOut:0,cryptoIn:0,cryptoOut:2915000,rate:15849,desk:"Desk 01",status:"Settled",kyc:"Verified",aml:"Clear",lp:"LP-001",bank:"MDR-20261024-8812",txid:"a4c9…8f1e"},
@@ -612,8 +633,12 @@ const deskAuditLog=[];
 function partnerCalculation(desk){const buy=Number(desk.buy),sell=Number(desk.sell),spread=Number(desk.spread),fee=Number(desk.fee);if(![buy,sell,spread,fee].every(Number.isFinite)||buy<=0||sell<=0)return null;const adjustment=(spread+fee)/100,gross=sell-buy;return{clientBuy:buy*(1+adjustment),clientSell:sell*(1-adjustment),gross,margin:(gross/buy*100)+fee}}
 function partnerValue(value){return Number.isFinite(value)?`Rp ${Math.round(value).toLocaleString("en-US")}`:"—"}
 function partnerPercent(value){return Number.isFinite(value)?`${value.toFixed(3)}%`:"—"}
-function partnerDeskCard(desk){const calc=partnerCalculation(desk),configured=desk.status==="Configured",summary=desk.summary||{},liquidity=desk.liquidity||{};return `<article class="card partner-desk-card" data-partner-card="${desk.id}"><header class="partner-desk-head"><div><div class="partner-desk-name"><i class="fi fi-rr-building" aria-hidden="true"></i>${desk.name}</div><p>Partner Exchange · ${liquidity.usdt?`${Number(liquidity.usdt).toLocaleString()} USDT available`:"OTC configuration"}</p></div><span class="partner-desk-status ${configured?"configured":""}" data-partner-status>${desk.status}</span></header><div class="partner-desk-body"><div class="partner-desk-fields"><label>Buy Price (IDR)<input type="number" min="0" step="1" value="${desk.buy}" placeholder="Awaiting partner input" data-partner-input="buy" aria-label="${desk.name} buy price"></label><label>Sell Price (IDR)<input type="number" min="0" step="1" value="${desk.sell}" placeholder="Awaiting partner input" data-partner-input="sell" aria-label="${desk.name} sell price"></label><label>Spread %<input type="number" min="0" step="0.001" value="${desk.spread}" placeholder="0.000" data-partner-input="spread" aria-label="${desk.name} spread"></label><label>Fee %<input type="number" min="0" step="0.001" value="${desk.fee}" placeholder="0.000" data-partner-input="fee" aria-label="${desk.name} fee"></label></div><div class="partner-desk-metrics"><div class="partner-desk-metric"><label>Client Price — Buy</label><strong data-partner-metric="clientBuy">${calc?partnerValue(calc.clientBuy):"—"}</strong></div><div class="partner-desk-metric"><label>Client Price — Sell</label><strong data-partner-metric="clientSell">${calc?partnerValue(calc.clientSell):"—"}</strong></div><div class="partner-desk-metric gross"><label>Gross Spread</label><strong data-partner-metric="gross">${calc?partnerValue(calc.gross):"—"}</strong><small data-partner-metric="grossRate">${calc?partnerPercent(calc.gross/Number(desk.buy)*100):"Awaiting prices"}</small></div><div class="partner-desk-metric margin"><label>Net Margin</label><strong data-partner-metric="margin">${calc?partnerPercent(calc.margin):"—"}</strong><small>Spread + fee model</small></div></div><div class="partner-desk-actions"><button class="partner-desk-save" type="button" data-save-partner="${desk.id}">Save Partner Configuration</button><a class="partner-desk-open" href="../partner-desk/?partner=${desk.id}">Open Partner Page →</a></div></div><footer class="partner-desk-foot"><div><span>Transactions</span><strong>${summary.transactions||"—"}</strong></div><div><span>Volume</span><strong>${summary.volume?`Rp ${(summary.volume/1000000000).toFixed(2)} B`:"—"}</strong></div><div><span>Revenue</span><strong>${summary.revenue?`Rp ${(summary.revenue/1000000).toFixed(2)} M`:"—"}</strong></div><div><span>Net Flow</span><strong>${summary.netFlow?`Rp ${(summary.netFlow/1000000000).toFixed(2)} B`:"—"}</strong></div></footer></article>`}
-function deskView(){view.innerHTML=title("OTC Partner Desk Configuration","Partner exchanges provide their own buy price, sell price, spread, fee, and operating data. Each saved change is recorded locally.",`<button class="button ghost desk-heading-action" id="view-desk-audit"><i class="fi fi-rr-time-past" aria-hidden="true"></i>View Audit Log</button>`)+`<div class="partner-desk-grid">${partnerDesks.map(partnerDeskCard).join("")}</div>`;document.querySelectorAll("[data-partner-card]").forEach(card=>card.querySelectorAll("[data-partner-input]").forEach(input=>input.addEventListener("input",()=>updatePartnerDesk(card.dataset.partnerCard))));document.querySelectorAll("[data-save-partner]").forEach(button=>button.onclick=()=>savePartnerDesk(button.dataset.savePartner));document.querySelector("#view-desk-audit").onclick=openDeskAudit}
+function deskCompactNumber(value,asset){const amount=Number(value||0);if(!amount)return "—";if(asset==="IDR")return money(amount);return `${amount.toLocaleString(undefined,{maximumFractionDigits:8})} ${asset}`}
+function deskGroupedVolumes(values,isFiat=false){const entries=Object.entries(values||{}).filter(([,value])=>Number(value)>0);if(!entries.length)return `<span class="desk-empty-value">—</span>`;return entries.map(([asset,value])=>`<span>${deskCompactNumber(value,isFiat&&asset==="IDR"?"IDR":asset)}</span>`).join("")}
+function deskLiquidity(desk){const liquidity=desk.liquidity||{},items=[];if(Number(liquidity.idr))items.push(deskCompactNumber(liquidity.idr,"IDR"));["usdt","usdc","btc"].forEach(asset=>{if(Number(liquidity[asset]))items.push(deskCompactNumber(liquidity[asset],asset.toUpperCase()))});return items.length?items.map(item=>`<span>${item}</span>`).join(""):`<span class="desk-empty-value">—</span>`}
+function deskMaskedWallet(desk){const wallet=desk.wallet||{},address=String(wallet.address||"").trim();if(!address)return `<span class="desk-empty-value">—</span>`;const compact=address.replace(/\s/g,"");const masked=compact.length>8?`${compact.slice(0,4)}…${compact.slice(-4)}`:compact;return `<span class="desk-wallet-address">${masked}</span><small>${wallet.asset||""}${wallet.network&&wallet.network!=="—"?` · ${wallet.network}`:""}</small>`}
+function partnerDeskRow(desk){return `<tr><td><a class="desk-exchange-link" href="../partner-desk/?partner=${desk.id}"><i class="fi fi-rr-building" aria-hidden="true"></i><span><strong>${desk.name}</strong><small>${desk.lastUpdated||"Awaiting update"}</small></span></a></td><td class="desk-buy">${Number(desk.buy)?money(Number(desk.buy)):"—"}</td><td class="desk-sell">${Number(desk.sell)?money(Number(desk.sell)):"—"}</td><td>${Number(desk.spread||0).toFixed(3)}%</td><td>${Number(desk.fee||0).toFixed(3)}%</td><td class="desk-stack">${deskLiquidity(desk)}</td><td class="desk-wallet">${deskMaskedWallet(desk)}</td><td class="desk-stack">${deskGroupedVolumes(desk.settledFiat,true)}</td><td class="desk-stack">${deskGroupedVolumes(desk.settledCrypto)}</td></tr>`}
+function deskView(){const tableRows=partnerDesks.map(partnerDeskRow).join("");view.innerHTML=title("OTC Partner Desk","Read-only consolidated partner quotes, liquidity, settlement wallets, and settled volumes from Supabase.")+`<section class="card partner-desk-table-card"><header><div><h2>Partner Exchange Overview</h2><p>One exchange per row. Prices and operating balances are supplied by each authorised partner.</p></div><span class="eyebrow">${partnerDesks.length} exchanges</span></header><div class="table-wrap"><table class="partner-desk-table"><thead><tr><th>Exchange</th><th>Buy Price</th><th>Sell Price</th><th>Spread</th><th>Fee</th><th>Available Liquidity</th><th>Crypto Wallet</th><th>Settled Fiat Volume</th><th>Settled Crypto Volume</th></tr></thead><tbody>${tableRows||`<tr><td colspan="9" class="empty">No partner desk data available.</td></tr>`}</tbody></table></div></section>`}
 function updatePartnerDesk(id){const desk=partnerDesks.find(item=>item.id===id),card=document.querySelector(`[data-partner-card="${id}"]`);if(!desk||!card)return;card.querySelectorAll("[data-partner-input]").forEach(input=>desk[input.dataset.partnerInput]=input.value);const calc=partnerCalculation(desk),setMetric=(name,value)=>card.querySelector(`[data-partner-metric="${name}"]`).textContent=value;setMetric("clientBuy",calc?partnerValue(calc.clientBuy):"—");setMetric("clientSell",calc?partnerValue(calc.clientSell):"—");setMetric("gross",calc?partnerValue(calc.gross):"—");setMetric("grossRate",calc?partnerPercent(calc.gross/Number(desk.buy)*100):"Awaiting prices");setMetric("margin",calc?partnerPercent(calc.margin):"—")}
 function savePartnerDesk(id){const desk=partnerDesks.find(item=>item.id===id),calc=partnerCalculation(desk);if(!calc){alert("Enter buy price, sell price, spread, and fee before saving the partner configuration.");return}desk.status="Configured";if(window.LBPPartnerDeskStore)window.LBPPartnerDeskStore.updatePartner(id,{buy:desk.buy,sell:desk.sell,spread:desk.spread,fee:desk.fee,status:desk.status});deskAuditLog.unshift({time:new Intl.DateTimeFormat("id-ID",{dateStyle:"medium",timeStyle:"short"}).format(new Date()),partner:desk.name,detail:`Buy ${partnerValue(Number(desk.buy))} · Sell ${partnerValue(Number(desk.sell))} · Spread ${desk.spread}% · Fee ${desk.fee}%`});const card=document.querySelector(`[data-partner-card="${id}"]`),status=card.querySelector("[data-partner-status]");status.textContent=desk.status;status.classList.add("configured")}
 function openDeskAudit(){modal.hidden=false;modal.innerHTML=`<article class="dialog" role="dialog" aria-modal="true" aria-label="OTC partner desk audit log"><header class="dialog-head"><div><h2>OTC Partner Desk Audit Log</h2><p class="sub">Local configuration changes only</p></div><button class="close" id="close-desk-audit" aria-label="Close audit log">×</button></header><div class="desk-audit-list">${deskAuditLog.length?deskAuditLog.map(item=>`<div><time>${item.time}</time><span>${item.partner}<br><small>${item.detail}</small></span><b>Saved</b></div>`).join(""):`<div><span>No partner configuration has been saved yet.</span></div>`}</div><footer class="dialog-footer"><button class="button ghost" id="close-desk-audit-footer">Close</button></footer></article>`;const close=()=>modal.hidden=true;document.querySelector("#close-desk-audit").onclick=close;document.querySelector("#close-desk-audit-footer").onclick=close;modal.onclick=event=>{if(event.target===modal)close()}}
@@ -741,6 +766,3 @@ async function bootstrapManagementLedger(){
 }
 
 window.LBPManagementAuth.ready.then(bootstrapManagementLedger).catch(showDataLoadError);
-
-
-;
