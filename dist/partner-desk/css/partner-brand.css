@@ -40,6 +40,105 @@
   background: #173891;
 }
 
+.partner-otp-panel[hidden] {
+  display: none;
+}
+
+.partner-otp-panel {
+  padding: 24px 28px;
+}
+
+.partner-otp-panel h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.partner-otp-panel > p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.partner-otp-destination {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.partner-otp-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.partner-otp-form label {
+  display: grid;
+  gap: 8px;
+  color: #526987;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.partner-otp-code {
+  width: 100%;
+  height: 58px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #0f172a;
+  font: 700 24px "IBM Plex Mono", "Inter", monospace;
+  letter-spacing: .45em;
+  text-align: center;
+}
+
+.partner-otp-code:focus {
+  outline: 3px solid rgba(30,64,175,.12);
+  border-color: var(--blue);
+}
+
+.partner-otp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.partner-otp-actions .partner-config-save {
+  flex: 1;
+  margin: 0;
+}
+
+.partner-otp-resend {
+  border: 0;
+  background: transparent;
+  color: var(--blue);
+  padding: 10px 0;
+  font: 700 11px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.partner-otp-resend:disabled {
+  color: #94a3b8;
+  cursor: wait;
+}
+
+.partner-otp-security {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #dbe4ef;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
 .partner-auth-links a:hover,
 .partner-auth-links button:hover,
 .partner-auth-footer a:hover {
@@ -59,5 +158,14 @@
 
   .partner-auth-brand strong {
     font-size: 11px;
+  }
+
+  .partner-otp-panel {
+    padding: 20px;
+  }
+
+  .partner-otp-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

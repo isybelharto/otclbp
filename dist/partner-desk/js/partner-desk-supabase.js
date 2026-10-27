@@ -69,7 +69,34 @@
     });
     if (error) throw error;
     if (data.session) await client.auth.signOut();
+    return { ...data, email: String(values.email).trim().toLowerCase() };
+  }
+
+  async function verifyPartnerEmailOtp(email, token) {
+    const normalisedEmail = String(email || "").trim().toLowerCase();
+    const normalisedToken = String(token || "").replace(/\D/g, "");
+    const emailError = corporateEmailError(normalisedEmail);
+    if (emailError) throw new Error(emailError);
+    if (!/^\d{6}$/.test(normalisedToken)) throw new Error("Enter the complete 6-digit verification code.");
+    const { data, error } = await client.auth.verifyOtp({
+      email: normalisedEmail,
+      token: normalisedToken,
+      type: "email",
+    });
+    if (error) throw error;
+    if (data.session) await client.auth.signOut();
     return data;
+  }
+
+  async function resendPartnerEmailOtp(email) {
+    const normalisedEmail = String(email || "").trim().toLowerCase();
+    const emailError = corporateEmailError(normalisedEmail);
+    if (emailError) throw new Error(emailError);
+    const { error } = await client.auth.resend({
+      type: "signup",
+      email: normalisedEmail,
+    });
+    if (error) throw error;
   }
 
   async function requestPasswordReset(email) {
@@ -116,5 +143,5 @@
     if (auditError) console.warn("Partner quote saved, but the audit event was not recorded.", auditError);
   }
 
-  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, requestPasswordReset, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, text };
+  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, verifyPartnerEmailOtp, resendPartnerEmailOtp, requestPasswordReset, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, text };
 })();

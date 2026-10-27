@@ -85,7 +85,28 @@ This is currently a read integration. Price edits, reconciliation actions, expor
 
 The Partner Desk is a separate module, but uses the same Supabase project and authorised user profiles as Management. Its database migrations create the partner desk tables, initialise the ten partner desks, add `profiles.partner_id`, and apply Row Level Security so an exchange partner can only see its own desk while Management can oversee every desk.
 
-New partners register at `/partner-desk/register.html` using a company email. The account remains inactive until a Management user reviews the request in **Partner Access Requests**, assigns the correct exchange desk, and approves it. Approval activates the partner profile; rejection keeps the profile disabled and records the decision in the audit trail. Password recovery starts at `/partner-desk/forgot-password.html` and completes at `/partner-desk/reset-password.html`.
+New partners register at `/partner-desk/register.html` using a company email and confirm the address with a six-digit email PIN. The account remains inactive until a Management user reviews the request in **Partner Access Requests**, assigns the correct exchange desk, and approves it. Approval activates the partner profile; rejection keeps the profile disabled and records the decision in the audit trail. Password recovery starts at `/partner-desk/forgot-password.html` and completes at `/partner-desk/reset-password.html`.
+
+### Six-digit email verification PIN
+
+Supabase sends a six-digit OTP when the **Confirm signup** email template uses the token variable instead of the confirmation-link variable:
+
+1. Open **Supabase Dashboard → Authentication → Email Templates → Confirm signup**.
+2. Set the subject to `Your LBP Partner Desk verification PIN`.
+3. Use `{{ .Token }}` in the email body to display the PIN. Do not use `{{ .ConfirmationURL }}` in this template, because that produces a verification link instead.
+4. Under **Authentication → Providers → Email**, set **Email OTP Expiration** to the desired validity period; `600` seconds is recommended.
+5. Save the settings and test with a new company-email registration. Existing unverified registrations can request another PIN from the registration screen.
+
+Minimal template body:
+
+```html
+<h2>Verify your LBP Partner Desk email</h2>
+<p>Enter this six-digit PIN on the registration screen:</p>
+<p style="font-size:32px;font-weight:700;letter-spacing:8px">{{ .Token }}</p>
+<p>This PIN expires shortly. Do not share it with anyone.</p>
+```
+
+The registration screen verifies the PIN with Supabase Auth and then signs the temporary session out. Email verification does not grant Partner Desk access; Management approval remains mandatory.
 
 Supabase Authentication must allow these production redirect URLs:
 
