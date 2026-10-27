@@ -113,8 +113,16 @@ Supabase Authentication must allow these production redirect URLs:
 
 - `https://management.ptlbp.co.id/partner-desk/login.html`
 - `https://management.ptlbp.co.id/partner-desk/reset-password.html`
+- `https://management.ptlbp.co.id/partner-desk/recovery.html`
 
 Set the Supabase Authentication **Site URL** to `https://management.ptlbp.co.id/`. The Partner Desk client deliberately uses production redirect URLs even when its registration form is previewed locally, preventing confirmation emails from falling back to a local development address.
+
+For the hosted Supabase project, set **Authentication → URL Configuration** to:
+
+- Site URL: `https://management.ptlbp.co.id/`
+- Redirect URL: `https://management.ptlbp.co.id/partner-desk/**`
+
+The Recovery email template must use `{{ .ConfirmationURL }}` for its reset link. A template based only on `{{ .SiteURL }}` ignores the recovery page requested by the client and can send users to a stale localhost URL.
 
 ## Local use
 

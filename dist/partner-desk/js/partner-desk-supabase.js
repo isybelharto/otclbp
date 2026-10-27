@@ -4,7 +4,15 @@
   const url = "https://biwwfxfpcsanszxrxhyw.supabase.co";
   const publishableKey = "sb_publishable_sB3GSSdJi477vhQAmjABnw_DT4sknEb";
   const productionPartnerUrl = "https://management.ptlbp.co.id/partner-desk/";
-  const client = window.supabase.createClient(url, publishableKey, { auth: { storageKey: "lbp-partner-desk-auth-v1", persistSession: true, autoRefreshToken: true } });
+  const client = window.supabase.createClient(url, publishableKey, {
+    auth: {
+      storageKey: "lbp-partner-desk-auth-v1",
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: "implicit",
+    },
+  });
   const text = (value, fallback = "") => value === null || value === undefined ? fallback : String(value);
   const authRedirect = (path) => new URL(path, productionPartnerUrl).href;
 
@@ -102,16 +110,45 @@
   async function requestPasswordReset(email) {
     const emailError = corporateEmailError(email);
     if (emailError) throw new Error(emailError);
-    const redirectTo = authRedirect("reset-password.html");
+    const redirectTo = authRedirect("recovery.html");
     const { error } = await client.auth.resetPasswordForEmail(String(email).trim().toLowerCase(), { redirectTo });
     if (error) throw error;
+  }
+
+  async function initialiseRecoverySession() {
+    const currentUrl = new URL(window.location.href);
+    const recoveryHash = currentUrl.hash.includes("type=recovery") || currentUrl.searchParams.get("type") === "recovery";
+    const { data: { session }, error } = await client.auth.getSession();
+    if (error) throw error;
+    if (session) {
+      if (currentUrl.hash) history.replaceState(null, document.title, currentUrl.pathname + currentUrl.search);
+      return session;
+    }
+    if (!recoveryHash) throw new Error("Open the latest password reset link sent to your company email.");
+    return await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        subscription.unsubscribe();
+        reject(new Error("The recovery link is invalid or has expired. Request a new reset email."));
+      }, 8000);
+      const { data: { subscription } } = client.auth.onAuthStateChange((event, nextSession) => {
+        if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && nextSession) {
+          clearTimeout(timer);
+          subscription.unsubscribe();
+          history.replaceState(null, document.title, currentUrl.pathname + currentUrl.search);
+          resolve(nextSession);
+        }
+      });
+    });
   }
 
   async function updatePassword(password, confirmation) {
     const errors = passwordErrors(password, confirmation);
     if (errors.length) throw new Error(errors[0]);
+    const { data: { session }, error: sessionError } = await client.auth.getSession();
+    if (sessionError || !session) throw new Error("The recovery session is missing or expired. Request a new password reset email.");
     const { error } = await client.auth.updateUser({ password });
     if (error) throw error;
+    await client.auth.signOut();
   }
 
   async function loadPartnerDesk(partnerId) {
@@ -143,5 +180,5 @@
     if (auditError) console.warn("Partner quote saved, but the audit event was not recorded.", auditError);
   }
 
-  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, verifyPartnerEmailOtp, resendPartnerEmailOtp, requestPasswordReset, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, text };
+  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, verifyPartnerEmailOtp, resendPartnerEmailOtp, requestPasswordReset, initialiseRecoverySession, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, text };
 })();
