@@ -1,25 +1,312 @@
-const deskStore=window.LBPPartnerDeskStore;
-const deskApp=document.querySelector("#partner-desk-app");
-const queryPartner=new URLSearchParams(location.search).get("partner");
-let activePartnerId=deskStore.getPartner(queryPartner)?queryPartner:deskStore.getPartners()[0].id;
-const badge=value=>`<span class="badge ${String(value).toLowerCase().replace(/\s/g,"-")}">${value}</span>`;
-const money=value=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(value).replace("Rp","Rp ");
-const compact=value=>`Rp ${(value/1000000000).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})} B`;
-const cryptoAmount=(amount,asset)=>asset==="BTC"?`${Number(amount).toFixed(4)} BTC`:`${Number(amount).toLocaleString()} ${asset}`;
-const partnerCalc=partner=>{const buy=Number(partner.buy),sell=Number(partner.sell),spread=Number(partner.spread),fee=Number(partner.fee),adjustment=(spread+fee)/100;return{buy,sell,clientBuy:buy*(1+adjustment),clientSell:sell*(1-adjustment),gross:sell-buy,margin:(sell-buy)/buy*100+fee}};
-function renderPartnerDesk(){
- const partner=deskStore.getPartner(activePartnerId),calc=partnerCalc(partner),partners=deskStore.getPartners();
- const priceRows=partner.priceHistory.map(row=>`<tr><td>${row.date}</td><td>${Number(row.buy).toLocaleString()}</td><td>${Number(row.sell).toLocaleString()}</td><td>${row.spread}%</td><td>${row.fee}%</td><td>${Number(row.available).toLocaleString()} USDT</td><td>${badge(row.status)}</td></tr>`).join("");
- const accountRows=partner.bankAccounts.map(account=>`<tr><td><span class="account-name">${account.bank}</span></td><td>${account.accountName}</td><td class="mono">${account.accountNumber}</td><td>${account.currency}</td><td>${badge(account.status)}</td></tr>`).join("");
- const walletRows=partner.wallets.map(wallet=>`<tr><td>${wallet.asset}</td><td>${wallet.network}</td><td><span class="wallet-address" title="${wallet.address}">${wallet.address}</span></td><td>${wallet.type}</td><td>${badge(wallet.status)}</td></tr>`).join("");
- const fiatRows=partner.fiatTransactions.map(tx=>`<tr><td class="mono">${tx.id}</td><td>${tx.date}</td><td class="${tx.direction.toLowerCase()}">${tx.direction}</td><td class="mono">${tx.currency} ${tx.amount.toLocaleString("id-ID")}</td><td>${tx.bank}</td><td class="mono">${tx.reference}</td><td>${badge(tx.status)}</td></tr>`).join("");
- const cryptoRows=partner.cryptoTransactions.map(tx=>`<tr><td class="mono">${tx.id}</td><td>${tx.date}</td><td class="${tx.direction.toLowerCase()}">${tx.direction}</td><td class="mono">${cryptoAmount(tx.amount,tx.asset)}</td><td>${tx.network}</td><td><a class="link mono" href="#" title="${tx.txid}">${tx.txid.slice(0,16)}…</a></td><td class="mono">${tx.confirmations}</td><td>${badge(tx.status)}</td></tr>`).join("");
- deskApp.innerHTML=`<header class="partner-top"><a class="partner-back" href="../management/">← Back to Management</a><div class="partner-top-actions"><select class="partner-select" id="partner-switch" aria-label="Select partner desk">${partners.map(item=>`<option value="${item.id}" ${item.id===partner.id?"selected":""}>${item.name}</option>`).join("")}</select><a class="partner-action ghost" href="../management/">Management</a></div></header><main class="partner-page"><section class="partner-heading"><div><h1>${partner.name} — OTC Partner Desk</h1><p>${partner.legalName} · ${partner.jurisdiction} · partner-operated settlement data</p><div class="partner-meta"><span><i class="fi fi-rr-building" aria-hidden="true"></i> Partner exchange</span><span>•</span><span>Updated ${partner.lastUpdated}</span></div></div><span class="partner-configured">${partner.status}</span></section><section class="partner-kpis"><div class="partner-kpi"><label>Available USDT Liquidity</label><strong>${partner.liquidity.usdt.toLocaleString()} USDT</strong><span>Whitelisted settlement allocation</span></div><div class="partner-kpi"><label>Available Fiat Balance</label><strong>${compact(partner.liquidity.idr)}</strong><span>Partner reported bank capacity</span></div><div class="partner-kpi"><label>24H Desk Volume</label><strong>${compact(partner.summary.volume)}</strong><span>${partner.summary.transactions} recorded transactions</span></div><div class="partner-kpi"><label>Daily Settlement Limit</label><strong>USD ${(partner.limits.dailyUsd/1000000).toFixed(1)} M</strong><span>Subject to compliance clearance</span></div></section><section class="partner-grid"><article class="partner-card"><header class="partner-card-head"><div><h2>Current Partner Quote</h2><p>Controlled price input, shared with Management OTC Partner Desks.</p></div><span>${badge("Current")}</span></header><div class="partner-card-body"><div class="partner-config-fields"><label>Buy Price (IDR)<input type="number" id="partner-buy" value="${partner.buy}"></label><label>Sell Price (IDR)<input type="number" id="partner-sell" value="${partner.sell}"></label><label>Spread %<input type="number" step="0.001" id="partner-spread" value="${partner.spread}"></label><label>Fee %<input type="number" step="0.001" id="partner-fee" value="${partner.fee}"></label></div><div class="partner-config-summary"><div><label>Client Buy</label><strong>Rp ${Math.round(calc.clientBuy).toLocaleString()}</strong></div><div><label>Client Sell</label><strong>Rp ${Math.round(calc.clientSell).toLocaleString()}</strong></div><div><label>Gross Spread</label><strong>Rp ${Math.round(calc.gross).toLocaleString()}</strong></div><div><label>Net Margin</label><strong>${calc.margin.toFixed(3)}%</strong></div></div><button class="partner-config-save" id="save-partner-quote">Save Partner Quote</button></div></article><article class="partner-card"><header class="partner-card-head"><div><h2>Available Liquidity</h2><p>Partner-provided capacity; refreshed with the daily quote.</p></div><span>${badge("Reconciled")}</span></header><div class="partner-card-body"><div class="partner-liquidity"><div class="liquidity-row"><span>USDT</span><div class="liquidity-bar"><i style="width:86%"></i></div><b>${partner.liquidity.usdt.toLocaleString()}</b></div><div class="liquidity-row"><span>USDC</span><div class="liquidity-bar"><i style="width:64%"></i></div><b>${partner.liquidity.usdc.toLocaleString()}</b></div><div class="liquidity-row"><span>BTC</span><div class="liquidity-bar"><i style="width:48%"></i></div><b>${partner.liquidity.btc.toFixed(4)}</b></div><div class="liquidity-row"><span>IDR</span><div class="liquidity-bar"><i style="width:72%"></i></div><b>${compact(partner.liquidity.idr)}</b></div></div><div class="partner-limits"><div><span>Per transaction limit</span><b>USD ${(partner.limits.perTransactionUsd/1000000).toFixed(2)} M</b></div><div><span>Settlement control</span><b>Compliance required</b></div></div></div></article></section><section class="partner-card partner-section"><header class="partner-card-head"><div><h2>Daily Price & Availability History</h2><p>Daily partner submissions; all historical entries remain available for review.</p></div><button class="partner-action ghost" id="show-history">21 daily entries</button></header><div class="partner-table-wrap"><table class="partner-table price-history-table"><thead><tr><th>Date</th><th>Buy Price</th><th>Sell Price</th><th>Spread</th><th>Fee</th><th>Available Volume</th><th>Status</th></tr></thead><tbody>${priceRows}</tbody></table></div></section><section class="partner-split-grid"><article class="partner-card"><header class="partner-card-head"><div><h2>Corporate Settlement Accounts</h2><p>Partner corporate accounts for settlement verification.</p></div></header><div class="partner-table-wrap"><table class="partner-table"><thead><tr><th>Bank</th><th>Account Name</th><th>Account No.</th><th>Currency</th><th>Status</th></tr></thead><tbody>${accountRows}</tbody></table></div></article><article class="partner-card"><header class="partner-card-head"><div><h2>Whitelisted Crypto Wallets</h2><p>Masked operational addresses shown only for controlled settlement.</p></div></header><div class="partner-table-wrap"><table class="partner-table"><thead><tr><th>Asset</th><th>Network</th><th>Wallet Address</th><th>Use</th><th>Status</th></tr></thead><tbody>${walletRows}</tbody></table></div></article></section><section class="partner-card partner-section"><header class="partner-card-head"><div><h2>Fiat Settlement History</h2><p>Bank-to-bank settlement records associated with this partner.</p></div><span>${partner.fiatTransactions.length} entries</span></header><div class="partner-table-wrap"><table class="partner-table"><thead><tr><th>Settlement ID</th><th>Date / Time</th><th>IN / OUT</th><th>Amount</th><th>Bank</th><th>Bank Reference</th><th>Status</th></tr></thead><tbody>${fiatRows}</tbody></table></div></section><section class="partner-card partner-section"><header class="partner-card-head"><div><h2>Crypto Settlement History</h2><p>On-chain records with network, transaction hash, and confirmations.</p></div><span>${partner.cryptoTransactions.length} entries</span></header><div class="partner-table-wrap"><table class="partner-table"><thead><tr><th>Settlement ID</th><th>Date / Time</th><th>IN / OUT</th><th>Amount</th><th>Network</th><th>Blockchain TXID</th><th>Confirmations</th><th>Status</th></tr></thead><tbody>${cryptoRows}</tbody></table></div></section><p class="partner-note"><b>Local prototype:</b> partner quote changes persist in this browser and are reflected in the Management OTC Partner Desks view. Production data requires authenticated partner access, banking confirmation, wallet screening, and compliance approval.</p></main><div class="partner-modal" id="partner-modal" hidden></div>`;
- document.querySelector("#partner-switch").onchange=event=>{activePartnerId=event.target.value;history.replaceState({},"",`?partner=${activePartnerId}`);renderPartnerDesk()};
- document.querySelector("#save-partner-quote").onclick=async()=>{const changes={buy:document.querySelector("#partner-buy").value,sell:document.querySelector("#partner-sell").value,spread:document.querySelector("#partner-spread").value,fee:document.querySelector("#partner-fee").value,status:"Configured"};if(!Object.values(changes).slice(0,4).every(value=>Number(value)>0)){alert("Enter valid partner buy price, sell price, spread, and fee.");return}try{const access=await window.LBPPartnerDeskSupabase.sessionProfile();await window.LBPPartnerDeskSupabase.saveQuote(partner.id,{buy_price:Number(changes.buy),sell_price:Number(changes.sell),spread_percent:Number(changes.spread),fee_percent:Number(changes.fee),available_usdt:Number(partner.liquidity.usdt||0),available_usdc:Number(partner.liquidity.usdc||0),available_btc:Number(partner.liquidity.btc||0),available_idr:Number(partner.liquidity.idr||0)},access.session.user.id);deskStore.updatePartner(partner.id,changes);alert("Partner quote submitted to Supabase.");renderPartnerDesk()}catch(error){console.error(error);alert(`Quote was not saved: ${error.message}`)}};
- document.querySelector("#show-history").onclick=()=>openHistoryModal(partner);
-}
-function openHistoryModal(partner){const modal=document.querySelector("#partner-modal");modal.hidden=false;modal.innerHTML=`<article class="partner-dialog" role="dialog" aria-modal="true" aria-label="${partner.name} price history"><header class="partner-dialog-head"><div><h2>${partner.name} Daily Quote History</h2><p>All 21 partner-submitted daily records.</p></div><button class="partner-dialog-close" id="close-partner-modal" aria-label="Close history">×</button></header><div class="partner-table-wrap"><table class="partner-table price-history-table"><thead><tr><th>Date</th><th>Buy</th><th>Sell</th><th>Spread</th><th>Fee</th><th>Available USDT</th></tr></thead><tbody>${partner.priceHistory.map(row=>`<tr><td>${row.date}</td><td>${Number(row.buy).toLocaleString()}</td><td>${Number(row.sell).toLocaleString()}</td><td>${row.spread}%</td><td>${row.fee}%</td><td>${Number(row.available).toLocaleString()}</td></tr>`).join("")}</tbody></table></div></article>`;const close=()=>modal.hidden=true;document.querySelector("#close-partner-modal").onclick=close;modal.onclick=event=>{if(event.target===modal)close()}}
-function databasePartner(base, record){const latest=record.quotes[0]||{},formatDate=value=>value?new Intl.DateTimeFormat("en-GB",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value)):"Awaiting partner update",quoteRows=record.quotes.map(quote=>({date:formatDate(quote.quoted_at),buy:Number(quote.buy_price),sell:Number(quote.sell_price),spread:Number(quote.spread_percent),fee:Number(quote.fee_percent),available:Number(quote.available_usdt),status:"Submitted"}));return {...base,id:record.desk.id,name:record.desk.display_name||base.name,legalName:record.desk.legal_name||base.legalName,jurisdiction:record.desk.jurisdiction||base.jurisdiction,operator:record.desk.operator_name||base.operator,status:record.desk.status||"active",buy:String(latest.buy_price??0),sell:String(latest.sell_price??0),spread:String(latest.spread_percent??0),fee:String(latest.fee_percent??0),lastUpdated:formatDate(latest.quoted_at||record.desk.updated_at),liquidity:{usdt:Number(latest.available_usdt||0),usdc:Number(latest.available_usdc||0),btc:Number(latest.available_btc||0),idr:Number(latest.available_idr||0)},priceHistory:quoteRows,bankAccounts:record.accounts.map(row=>({bank:row.bank_name,accountName:row.account_name,accountNumber:row.account_number_masked,currency:row.currency,status:row.status})),wallets:record.wallets.map(row=>({asset:row.asset,network:row.network,address:row.address_masked,type:row.wallet_use,status:row.status})),fiatTransactions:record.fiat.map(row=>({id:row.id,date:formatDate(row.settled_at),direction:String(row.direction).toUpperCase(),currency:row.currency,amount:Number(row.amount),bank:row.bank_name,reference:row.bank_reference,status:row.status})),cryptoTransactions:record.crypto.map(row=>({id:row.id,date:formatDate(row.settled_at),direction:String(row.direction).toUpperCase(),asset:row.asset,amount:Number(row.amount),network:row.network,txid:row.txid||"—",confirmations:row.confirmations,status:row.status}))}}
-async function bootstrapPartnerDesk(){try{const access=await window.LBPPartnerDeskSupabase.sessionProfile();if(!access){location.replace("login.html");return}const available=await window.LBPPartnerDeskSupabase.listPartnerDesks(),allowed=access.profile.role==="management"?available:available.filter(item=>item.id===access.profile.partner_id);if(!allowed.length){throw new Error("No active partner desk is assigned to this account.")}const seeds=deskStore.getPartners(),loaded=await Promise.all(allowed.map(async desk=>databasePartner(seeds.find(item=>item.id===desk.id)||{...seeds[0],id:desk.id,name:desk.display_name},await window.LBPPartnerDeskSupabase.loadPartnerDesk(desk.id))));deskStore.setPartners(loaded);activePartnerId=deskStore.getPartner(queryPartner)&&allowed.some(item=>item.id===queryPartner)?queryPartner:loaded[0].id;renderPartnerDesk()}catch(error){console.error(error);deskApp.innerHTML=`<main class="partner-page"><section class="partner-card partner-section"><h1>Partner Desk unavailable</h1><p>Unable to load the governed partner data. Confirm the Supabase migration, active profile, and Row Level Security policy.</p></section></main>`}}
-bootstrapPartnerDesk();
+(function initialisePartnerDeskPage() {
+  "use strict";
+
+  const api = window.LBPPartnerDeskSupabase;
+  const app = document.querySelector("#partner-desk-app");
+  const requestedPartner = new URLSearchParams(window.location.search).get("partner");
+  const tabs = [
+    ["dashboard", "Dashboard"],
+    ["history", "Quote History"],
+    ["liquidity", "Available Liquidity"],
+    ["accounts", "Settlement Accounts"],
+    ["wallets", "Crypto Wallets"],
+    ["fiat", "Fiat History"],
+    ["crypto", "Crypto History"],
+  ];
+
+  let access = null;
+  let allowedDesks = [];
+  let activePartnerId = "";
+  let activeTab = "dashboard";
+  let currentRecord = null;
+
+  const escapeHtml = (value) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+  const number = (value) => Number(value || 0);
+  const idr = (value) => new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(number(value)).replace("Rp", "Rp ");
+  const compactIdr = (value) => {
+    const amount = number(value);
+    if (amount >= 1e12) return `Rp ${(amount / 1e12).toLocaleString("en-US", { maximumFractionDigits: 2 })} T`;
+    if (amount >= 1e9) return `Rp ${(amount / 1e9).toLocaleString("en-US", { maximumFractionDigits: 2 })} B`;
+    if (amount >= 1e6) return `Rp ${(amount / 1e6).toLocaleString("en-US", { maximumFractionDigits: 2 })} M`;
+    return idr(amount);
+  };
+  const quantity = (value, asset, maximumFractionDigits = 4) => `${number(value).toLocaleString("en-US", { maximumFractionDigits })} ${asset}`;
+  const dateTime = (value) => value
+    ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" }).format(new Date(value)) + " WIB"
+    : "Not submitted";
+  const badge = (value) => {
+    const label = String(value || "Pending");
+    return `<span class="badge ${escapeHtml(label.toLowerCase().replace(/\s+/g, "-"))}">${escapeHtml(label)}</span>`;
+  };
+  const emptyRow = (columns, message) => `<tr><td class="partner-empty" colspan="${columns}">${escapeHtml(message)}</td></tr>`;
+  const latestQuote = () => currentRecord?.quotes?.[0] || {};
+
+  function renderShell() {
+    const desk = currentRecord.desk;
+    const profile = access.profile;
+    const isManagement = profile.role === "management";
+    const deskControl = isManagement
+      ? `<label class="partner-desk-picker"><span>Partner desk</span><select class="partner-select" id="partner-switch">${allowedDesks.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === activePartnerId ? "selected" : ""}>${escapeHtml(item.display_name)}</option>`).join("")}</select></label>`
+      : `<div class="partner-session"><span>${escapeHtml(profile.full_name || desk.operator_name || "Partner operator")}</span><strong>${escapeHtml(desk.display_name)}</strong></div>`;
+
+    app.innerHTML = `
+      <header class="partner-top">
+        <a class="partner-brand" href="./" aria-label="LBP OTC Partner Desk">
+          <span class="partner-brand-mark">LBP</span>
+          <span>PT LINTAS BATAS<small>PARTNER OTC DESK</small></span>
+        </a>
+        <div class="partner-top-actions">
+          ${deskControl}
+          ${isManagement ? '<a class="partner-action ghost" href="../">Management</a>' : ""}
+          <button class="partner-action ghost" id="partner-sign-out" type="button">Sign out</button>
+        </div>
+      </header>
+      <main class="partner-page">
+        <section class="partner-heading">
+          <div>
+            <span class="partner-eyebrow">Authenticated exchange workspace</span>
+            <h1>${escapeHtml(desk.display_name)} OTC Partner Desk</h1>
+            <p>${escapeHtml(desk.legal_name || desk.display_name)} · ${escapeHtml(desk.jurisdiction || "Jurisdiction pending")}</p>
+          </div>
+          ${badge(desk.status || "Active")}
+        </section>
+        <nav class="partner-tabs" aria-label="Partner Desk modules">
+          ${tabs.map(([id, label]) => `<button class="partner-tab ${activeTab === id ? "active" : ""}" type="button" data-tab="${id}" aria-selected="${activeTab === id}">${label}</button>`).join("")}
+        </nav>
+        <section id="partner-tab-content"></section>
+      </main>`;
+
+    document.querySelectorAll("[data-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeTab = button.dataset.tab;
+        renderShell();
+        renderActiveTab();
+      });
+    });
+    document.querySelector("#partner-sign-out").addEventListener("click", async () => {
+      await api.client.auth.signOut();
+      window.location.replace("login.html");
+    });
+    const partnerSwitch = document.querySelector("#partner-switch");
+    if (partnerSwitch) {
+      partnerSwitch.addEventListener("change", async (event) => {
+        activePartnerId = event.target.value;
+        history.replaceState({}, "", `?partner=${encodeURIComponent(activePartnerId)}`);
+        await loadDesk();
+      });
+    }
+  }
+
+  function renderActiveTab() {
+    const target = document.querySelector("#partner-tab-content");
+    if (!target) return;
+    const renderers = {
+      dashboard: renderDashboard,
+      history: renderQuoteHistory,
+      liquidity: renderLiquidity,
+      accounts: renderAccounts,
+      wallets: renderWallets,
+      fiat: renderFiatHistory,
+      crypto: renderCryptoHistory,
+    };
+    target.innerHTML = renderers[activeTab]();
+    if (activeTab === "dashboard") bindQuoteForm();
+  }
+
+  function operationalSummary() {
+    const fiat = currentRecord.fiat || [];
+    const crypto = currentRecord.crypto || [];
+    const settledFiat = fiat.filter((row) => String(row.status).toLowerCase() === "settled");
+    return {
+      fiatVolume: settledFiat.reduce((sum, row) => sum + number(row.amount), 0),
+      settlements: fiat.length + crypto.length,
+      accounts: (currentRecord.accounts || []).length,
+      wallets: (currentRecord.wallets || []).length,
+    };
+  }
+
+  function renderDashboard() {
+    const quote = latestQuote();
+    const summary = operationalSummary();
+    const hasQuote = Boolean(quote.id);
+    return `
+      <div class="partner-overview-grid">
+        <article class="partner-card partner-dashboard-card">
+          <header class="partner-card-head">
+            <div><h2>Dashboard</h2><p>Current operating position for this exchange desk.</p></div>
+            ${badge(hasQuote ? "Current" : "Pending")}
+          </header>
+          <div class="partner-card-body">
+            <div class="partner-kpis">
+              <div class="partner-kpi"><label>Available USDT</label><strong>${quantity(quote.available_usdt, "USDT", 2)}</strong><span>Latest submitted capacity</span></div>
+              <div class="partner-kpi"><label>Available IDR</label><strong>${compactIdr(quote.available_idr)}</strong><span>Partner settlement capacity</span></div>
+              <div class="partner-kpi"><label>Settled Fiat Volume</label><strong>${compactIdr(summary.fiatVolume)}</strong><span>Recorded settlement history</span></div>
+              <div class="partner-kpi"><label>Settlement Records</label><strong>${summary.settlements.toLocaleString("en-US")}</strong><span>Fiat and on-chain records</span></div>
+            </div>
+            <div class="partner-control-list">
+              <div><span>Last quote submission</span><strong>${escapeHtml(dateTime(quote.quoted_at))}</strong></div>
+              <div><span>Corporate settlement accounts</span><strong>${summary.accounts}</strong></div>
+              <div><span>Whitelisted crypto wallets</span><strong>${summary.wallets}</strong></div>
+              <div><span>Desk access</span><strong>${access.profile.role === "management" ? "Management review" : "Assigned partner only"}</strong></div>
+            </div>
+          </div>
+        </article>
+        ${renderQuoteCard(quote)}
+      </div>`;
+  }
+
+  function renderQuoteCard(quote) {
+    return `
+      <article class="partner-card partner-quote-card">
+        <header class="partner-card-head">
+          <div><h2>Current Partner Quote</h2><p>Submit today's OTC prices and immediately available volume.</p></div>
+          ${badge(quote.id ? "Current" : "New")}
+        </header>
+        <form class="partner-card-body" id="partner-quote-form">
+          <div class="partner-config-fields">
+            <label>Buy Price (IDR)<input type="number" min="0" step="1" id="partner-buy" value="${escapeHtml(quote.buy_price || "")}" required></label>
+            <label>Sell Price (IDR)<input type="number" min="0" step="1" id="partner-sell" value="${escapeHtml(quote.sell_price || "")}" required></label>
+            <label>Spread %<input type="number" min="0" step="0.001" id="partner-spread" value="${escapeHtml(quote.spread_percent ?? "")}" required></label>
+            <label>Fee %<input type="number" min="0" step="0.001" id="partner-fee" value="${escapeHtml(quote.fee_percent ?? "")}" required></label>
+          </div>
+          <div class="partner-form-divider"><span>Available liquidity</span></div>
+          <div class="partner-config-fields partner-volume-fields">
+            <label>Available USDT<input type="number" min="0" step="0.01" id="partner-usdt" value="${escapeHtml(quote.available_usdt ?? "")}" required></label>
+            <label>Available USDC<input type="number" min="0" step="0.01" id="partner-usdc" value="${escapeHtml(quote.available_usdc ?? "")}" required></label>
+            <label>Available BTC<input type="number" min="0" step="0.00000001" id="partner-btc" value="${escapeHtml(quote.available_btc ?? "")}" required></label>
+            <label>Available IDR<input type="number" min="0" step="1" id="partner-idr" value="${escapeHtml(quote.available_idr ?? "")}" required></label>
+          </div>
+          <label class="partner-note-field">Submission note<textarea id="partner-note" rows="2" maxlength="500" placeholder="Optional execution or liquidity note">${escapeHtml(quote.note || "")}</textarea></label>
+          <p class="partner-form-status" id="partner-form-status" role="status"></p>
+          <button class="partner-config-save" id="save-partner-quote" type="submit">Submit Partner Quote</button>
+        </form>
+      </article>`;
+  }
+
+  function renderQuoteHistory() {
+    const rows = (currentRecord.quotes || []).map((row) => `<tr>
+      <td>${escapeHtml(dateTime(row.quoted_at))}</td><td class="mono">${escapeHtml(idr(row.buy_price))}</td><td class="mono">${escapeHtml(idr(row.sell_price))}</td>
+      <td class="mono">${number(row.spread_percent).toFixed(3)}%</td><td class="mono">${number(row.fee_percent).toFixed(3)}%</td>
+      <td class="mono">${escapeHtml(quantity(row.available_usdt, "USDT", 2))}</td><td>${badge(row.id === latestQuote().id ? "Current" : "Recorded")}</td>
+    </tr>`).join("") || emptyRow(7, "No partner quote has been submitted yet.");
+    return tableCard("Daily Quote & Availability History", "Every submitted quote remains available for review.", ["Date / Time", "Buy Price", "Sell Price", "Spread", "Fee", "Available USDT", "Status"], rows);
+  }
+
+  function renderLiquidity() {
+    const quote = latestQuote();
+    const items = [["USDT", quote.available_usdt, "USDT", "#1e40af"], ["USDC", quote.available_usdc, "USDC", "#059669"], ["BTC", quote.available_btc, "BTC", "#7c3aed"], ["IDR", quote.available_idr, "IDR", "#f59e0b"]];
+    const max = Math.max(...items.map((item) => number(item[1])), 1);
+    return `<article class="partner-card partner-tab-card"><header class="partner-card-head"><div><h2>Available Liquidity</h2><p>Liquidity from the latest partner quote submitted ${escapeHtml(dateTime(quote.quoted_at))}.</p></div>${badge(quote.id ? "Current" : "Pending")}</header><div class="partner-liquidity-grid">${items.map(([label, value, asset, color]) => `<div class="partner-liquidity-card"><span>${label}</span><strong>${asset === "IDR" ? compactIdr(value) : quantity(value, asset, asset === "BTC" ? 8 : 2)}</strong><div class="liquidity-bar"><i style="width:${Math.max(2, Math.min(100, number(value) / max * 100))}%;background:${color}"></i></div></div>`).join("")}</div></article>`;
+  }
+
+  function renderAccounts() {
+    const rows = (currentRecord.accounts || []).map((row) => `<tr><td class="account-name">${escapeHtml(row.bank_name)}</td><td>${escapeHtml(row.account_name)}</td><td class="mono">${escapeHtml(row.account_number_masked)}</td><td>${escapeHtml(row.currency)}</td><td>${badge(row.status)}</td></tr>`).join("") || emptyRow(5, "No corporate settlement account has been registered.");
+    return tableCard("Corporate Settlement Accounts", "Verified corporate accounts available for controlled settlement.", ["Bank", "Account Name", "Account No.", "Currency", "Status"], rows);
+  }
+
+  function renderWallets() {
+    const rows = (currentRecord.wallets || []).map((row) => `<tr><td>${escapeHtml(row.asset)}</td><td>${escapeHtml(row.network)}</td><td><span class="wallet-address" title="${escapeHtml(row.address_masked)}">${escapeHtml(row.address_masked)}</span></td><td>${escapeHtml(row.wallet_use)}</td><td>${badge(row.status)}</td></tr>`).join("") || emptyRow(5, "No whitelisted crypto wallet has been registered.");
+    return tableCard("Whitelisted Crypto Wallets", "Only controlled settlement addresses associated with this partner are displayed.", ["Asset", "Network", "Wallet Address", "Use", "Status"], rows);
+  }
+
+  function renderFiatHistory() {
+    const rows = (currentRecord.fiat || []).map((row) => `<tr><td class="mono">${escapeHtml(row.id)}</td><td>${escapeHtml(dateTime(row.settled_at))}</td><td class="${escapeHtml(String(row.direction).toLowerCase())}">${escapeHtml(String(row.direction).toUpperCase())}</td><td class="mono">${escapeHtml(row.currency)} ${number(row.amount).toLocaleString("id-ID")}</td><td>${escapeHtml(row.bank_name)}</td><td class="mono">${escapeHtml(row.bank_reference || "—")}</td><td>${badge(row.status)}</td></tr>`).join("") || emptyRow(7, "No fiat settlement has been recorded.");
+    return tableCard("Fiat Settlement History", "Bank-to-bank settlement records associated with this partner.", ["Settlement ID", "Date / Time", "IN / OUT", "Amount", "Bank", "Bank Reference", "Status"], rows);
+  }
+
+  function renderCryptoHistory() {
+    const rows = (currentRecord.crypto || []).map((row) => `<tr><td class="mono">${escapeHtml(row.id)}</td><td>${escapeHtml(dateTime(row.settled_at))}</td><td class="${escapeHtml(String(row.direction).toLowerCase())}">${escapeHtml(String(row.direction).toUpperCase())}</td><td class="mono">${escapeHtml(quantity(row.amount, row.asset, row.asset === "BTC" ? 8 : 2))}</td><td>${escapeHtml(row.network)}</td><td><span class="wallet-address" title="${escapeHtml(row.txid || "")}">${escapeHtml(row.txid || "—")}</span></td><td class="mono">${escapeHtml(row.confirmations ?? "—")}</td><td>${badge(row.status)}</td></tr>`).join("") || emptyRow(8, "No crypto settlement has been recorded.");
+    return tableCard("Crypto Settlement History", "On-chain settlement records with network confirmations.", ["Settlement ID", "Date / Time", "IN / OUT", "Amount", "Network", "Blockchain TXID", "Confirmations", "Status"], rows);
+  }
+
+  function tableCard(title, subtitle, headers, rows) {
+    return `<article class="partner-card partner-tab-card"><header class="partner-card-head"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div></header><div class="partner-table-wrap"><table class="partner-table"><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div></article>`;
+  }
+
+  function bindQuoteForm() {
+    const form = document.querySelector("#partner-quote-form");
+    if (!form) return;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = document.querySelector("#partner-form-status");
+      const button = document.querySelector("#save-partner-quote");
+      const values = {
+        buy_price: number(document.querySelector("#partner-buy").value), sell_price: number(document.querySelector("#partner-sell").value),
+        spread_percent: number(document.querySelector("#partner-spread").value), fee_percent: number(document.querySelector("#partner-fee").value),
+        available_usdt: number(document.querySelector("#partner-usdt").value), available_usdc: number(document.querySelector("#partner-usdc").value),
+        available_btc: number(document.querySelector("#partner-btc").value), available_idr: number(document.querySelector("#partner-idr").value),
+        note: document.querySelector("#partner-note").value.trim() || null,
+      };
+      const positivePrices = values.buy_price > 0 && values.sell_price > 0;
+      const nonNegative = [values.spread_percent, values.fee_percent, values.available_usdt, values.available_usdc, values.available_btc, values.available_idr].every((value) => Number.isFinite(value) && value >= 0);
+      if (!positivePrices || !nonNegative) {
+        status.textContent = "Enter positive buy/sell prices and non-negative fee, spread, and liquidity values.";
+        status.className = "partner-form-status error";
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "Submitting…";
+      status.textContent = "";
+      try {
+        await api.saveQuote(activePartnerId, values, access.session.user.id);
+        currentRecord = await api.loadPartnerDesk(activePartnerId);
+        renderShell();
+        renderActiveTab();
+        const nextStatus = document.querySelector("#partner-form-status");
+        if (nextStatus) {
+          nextStatus.textContent = "Partner quote and available liquidity were saved successfully.";
+          nextStatus.className = "partner-form-status success";
+        }
+      } catch (error) {
+        status.textContent = `Quote was not saved: ${error.message}`;
+        status.className = "partner-form-status error";
+        button.disabled = false;
+        button.textContent = "Submit Partner Quote";
+      }
+    });
+  }
+
+  async function loadDesk() {
+    app.innerHTML = '<main class="partner-loading"><div class="partner-spinner"></div><p>Loading governed partner data…</p></main>';
+    try {
+      currentRecord = await api.loadPartnerDesk(activePartnerId);
+      if (!currentRecord.desk) throw new Error("The assigned Partner Desk could not be found.");
+      renderShell();
+      renderActiveTab();
+    } catch (error) {
+      renderError(error.message);
+    }
+  }
+
+  function renderError(message) {
+    app.innerHTML = `<main class="partner-page"><section class="partner-card partner-error"><h1>Partner Desk unavailable</h1><p>${escapeHtml(message || "Unable to load the governed partner data.")}</p><a class="partner-action" href="login.html">Return to login</a></section></main>`;
+  }
+
+  async function bootstrap() {
+    try {
+      access = await api.sessionProfile();
+      if (!access) {
+        window.location.replace("login.html");
+        return;
+      }
+      const allDesks = await api.listPartnerDesks();
+      allowedDesks = access.profile.role === "management" ? allDesks : allDesks.filter((desk) => desk.id === access.profile.partner_id);
+      if (!allowedDesks.length) throw new Error("No active Partner Desk is assigned to this account.");
+      activePartnerId = allowedDesks.some((desk) => desk.id === requestedPartner) ? requestedPartner : allowedDesks[0].id;
+      await loadDesk();
+    } catch (error) {
+      renderError(error.message);
+    }
+  }
+
+  bootstrap();
+})();

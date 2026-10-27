@@ -15,7 +15,7 @@
   }
 
   async function loadPartnerDesk(partnerId) {
-    const [{ data: desk, error: deskError }, { data: quotes, error: quotesError }, { data: accounts }, { data: wallets }, { data: fiat }, { data: crypto }] = await Promise.all([
+    const results = await Promise.all([
       client.from("partner_desks").select("*").eq("id", partnerId).maybeSingle(),
       client.from("partner_desk_quotes").select("*").eq("partner_id", partnerId).order("quoted_at", { ascending: false }),
       client.from("partner_desk_bank_accounts").select("*").eq("partner_id", partnerId).order("created_at", { ascending: false }),
@@ -23,7 +23,9 @@
       client.from("partner_desk_fiat_settlements").select("*").eq("partner_id", partnerId).order("settled_at", { ascending: false }),
       client.from("partner_desk_crypto_settlements").select("*").eq("partner_id", partnerId).order("settled_at", { ascending: false }),
     ]);
-    if (deskError || quotesError) throw deskError || quotesError;
+    const firstError = results.find((result) => result.error)?.error;
+    if (firstError) throw firstError;
+    const [{ data: desk }, { data: quotes }, { data: accounts }, { data: wallets }, { data: fiat }, { data: crypto }] = results;
     return { desk, quotes: quotes || [], accounts: accounts || [], wallets: wallets || [], fiat: fiat || [], crypto: crypto || [] };
   }
 
@@ -37,7 +39,8 @@
     const payload = { partner_id: partnerId, submitted_by: userId, quoted_at: new Date().toISOString(), ...values };
     const { error } = await client.from("partner_desk_quotes").insert(payload);
     if (error) throw error;
-    await client.from("partner_desk_audit_events").insert({ partner_id: partnerId, actor_id: userId, action: "SUBMIT_QUOTE", new_value: payload });
+    const { error: auditError } = await client.from("partner_desk_audit_events").insert({ partner_id: partnerId, actor_id: userId, action: "SUBMIT_QUOTE", new_value: payload });
+    if (auditError) console.warn("Partner quote saved, but the audit event was not recorded.", auditError);
   }
 
   window.LBPPartnerDeskSupabase = { client, sessionProfile, listPartnerDesks, loadPartnerDesk, saveQuote, text };
