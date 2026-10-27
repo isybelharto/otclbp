@@ -24,10 +24,12 @@
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/partner-desk-supabase.js?v=20261027-brand"></script>
+  <script src="js/partner-desk-supabase.js?v=20261027-auth-redirect"></script>
   <script>
     const status=document.querySelector('#partner-login-status'),query=new URLSearchParams(location.search);
+    async function finishEmailConfirmation(){if(!location.hash.includes('access_token='))return;await window.LBPPartnerDeskSupabase.client.auth.getSession();if(history.replaceState)history.replaceState({},document.title,location.pathname+'?verified=1');await window.LBPPartnerDeskSupabase.client.auth.signOut({scope:'local'});status.textContent='Email verified. Your request remains subject to Management approval.';status.className='partner-auth-status success'}
     if(query.get('verified')){status.textContent='Email verified. Your request remains subject to Management approval.';status.className='partner-auth-status success'}
+    finishEmailConfirmation().catch(()=>{status.textContent='Email confirmation completed. Please sign in after Management approval.';status.className='partner-auth-status success'});
     document.querySelector('#forgot-user-id').onclick=()=>{const panel=document.querySelector('#partner-userid-help');panel.hidden=!panel.hidden};
     document.querySelector('#partner-login-form').addEventListener('submit',async event=>{
       event.preventDefault();status.textContent='Checking access…';status.className='partner-auth-status';

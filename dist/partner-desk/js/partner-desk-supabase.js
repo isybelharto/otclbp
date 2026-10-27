@@ -3,8 +3,10 @@
 
   const url = "https://biwwfxfpcsanszxrxhyw.supabase.co";
   const publishableKey = "sb_publishable_sB3GSSdJi477vhQAmjABnw_DT4sknEb";
+  const productionPartnerUrl = "https://management.ptlbp.co.id/partner-desk/";
   const client = window.supabase.createClient(url, publishableKey, { auth: { persistSession: true, autoRefreshToken: true } });
   const text = (value, fallback = "") => value === null || value === undefined ? fallback : String(value);
+  const authRedirect = (path) => new URL(path, productionPartnerUrl).href;
 
   async function sessionProfile() {
     const { data: { session }, error } = await client.auth.getSession();
@@ -49,7 +51,7 @@
     if (emailError) throw new Error(emailError);
     const errors = passwordErrors(values.password, values.passwordConfirmation);
     if (errors.length) throw new Error(errors[0]);
-    const emailRedirectTo = new URL("./login.html?verified=1", window.location.href).href;
+    const emailRedirectTo = authRedirect("login.html?verified=1");
     const { data, error } = await client.auth.signUp({
       email: String(values.email).trim().toLowerCase(),
       password: values.password,
@@ -73,7 +75,7 @@
   async function requestPasswordReset(email) {
     const emailError = corporateEmailError(email);
     if (emailError) throw new Error(emailError);
-    const redirectTo = new URL("./reset-password.html", window.location.href).href;
+    const redirectTo = authRedirect("reset-password.html");
     const { error } = await client.auth.resetPasswordForEmail(String(email).trim().toLowerCase(), { redirectTo });
     if (error) throw error;
   }

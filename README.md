@@ -92,6 +92,8 @@ Supabase Authentication must allow these production redirect URLs:
 - `https://management.ptlbp.co.id/partner-desk/login.html`
 - `https://management.ptlbp.co.id/partner-desk/reset-password.html`
 
+Set the Supabase Authentication **Site URL** to `https://management.ptlbp.co.id/`. The Partner Desk client deliberately uses production redirect URLs even when its registration form is previewed locally, preventing confirmation emails from falling back to a local development address.
+
 ## Local use
 
 Open `dist/index.html` in a modern browser, or serve the `dist/` directory from any static file server. For local static preview:

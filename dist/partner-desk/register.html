@@ -12,7 +12,7 @@
 <div class="password-requirements" id="password-requirements"><span data-rule="length">At least 8 characters</span><span data-rule="capital">One capital letter</span><span data-rule="special">One special character</span><span data-rule="repeat">No character repeated 3 times</span><span data-rule="match">Passwords match</span></div>
 <button class="partner-config-save full" type="submit">Submit access request</button><p id="partner-register-status" class="partner-auth-status full" role="status"></p>
 </form><footer class="partner-auth-footer">Already registered? <a href="login.html">Return to sign in</a></footer></section></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/partner-desk-supabase.js?v=20261027-brand"></script><script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/partner-desk-supabase.js?v=20261027-auth-redirect"></script><script>
 const password=document.querySelector('#registration-password'),confirmation=document.querySelector('#registration-password-confirm'),status=document.querySelector('#partner-register-status');
 function showRules(){const value=password.value,confirm=confirmation.value,rules={length:value.length>=8,capital:/[A-Z]/.test(value),special:/[^A-Za-z0-9]/.test(value),repeat:!/(.)\1\1/i.test(value),match:value.length>0&&value===confirm};Object.entries(rules).forEach(([key,valid])=>document.querySelector(`[data-rule="${key}"]`).classList.toggle('valid',valid))}
 password.addEventListener('input',showRules);confirmation.addEventListener('input',showRules);
