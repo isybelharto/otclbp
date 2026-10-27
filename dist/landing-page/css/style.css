@@ -40,6 +40,13 @@ html:lang(hi) .serif,html:lang(zh-CN) .serif,html:lang(ja) .serif,html:lang(ko) 
 }
 @media(max-width:370px){.nav-row{column-gap:6px}.brand img{width:148px}.language-switcher select{width:86px;font-size:10px}.hero h1:lang(ru),.hero h1:lang(fr),.hero h1:lang(de){font-size:32px}.hero h1:lang(zh-CN),.hero h1:lang(ja),.hero h1:lang(ko),.hero h1:lang(hi){font-size:29px}}
 @media print{.language-switcher{display:none!important}}
+
+/* Partner Desk registration entry point. */
+.nav-partner-cta{background:transparent;color:var(--navy);border-color:#6f8b7e;gap:12px}
+.nav-partner-cta:hover{background:#e5ede6;color:var(--navy);border-color:#416c5b}
+.nav-partner-cta .icon{width:16px;height:16px}
+@media(max-width:1100px){.navigation .nav-partner-cta{margin-left:0}}
+@media(max-width:700px){.navigation .nav-partner-cta,.navigation .nav-cta{width:100%;margin-left:0}}
 /* Keep all three header controls on one row, including the browser scrollbar. */
 .hero-minimum strong{white-space:nowrap}.hero-minimum>div{flex-shrink:0}.hero-minimum p{min-width:0;overflow-wrap:break-word}
 @media(max-width:700px){.brand img{width:162px}}
