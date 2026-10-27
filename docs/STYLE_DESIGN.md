@@ -21,11 +21,14 @@ The application surface uses near-white and white (`#F8FAFC` / `#FFFFFF`) with s
 
 ## Logo usage
 
-- Use the approved crypto-to-fiat LBP logo asset at `dist/management/assets/lbp-crypto-fiat-logo.png` consistently across Management and Partner Desk pages.
-- Do not replace the approved logo with a typed `LBP`, currency symbol, emoji, landmark icon, or a differently styled logo.
+- The approved LBP mark is the blue open-corner and diagonal-arrow symbol, using brand blue `#2F4EC8` on white. Its geometry must remain unchanged.
+- Use `dist/landing-page/asset/mark.svg` as the canonical standalone mark and the approved dark/light lockups in the same asset folder for public-site headers and footers.
+- Management and Partner Desk use the compact mark asset at `dist/management/assets/lbp-crypto-fiat-logo.png` beside the product name.
+- Do not replace the approved mark with typed `LBP`, a currency symbol, emoji, landmark icon, or another graphic.
 - Preserve the logo aspect ratio with `object-fit: contain`; never stretch, crop, recolor, rotate, or add effects.
 - The full logo uses a minimum displayed width of 92px on compact screens and 112px on desktop surfaces.
-- Place the logo on white or near-white surfaces with adequate clear space. Supporting module text may appear beside it but must not overlap the mark.
+- Use the white inverse lockup on deep navy surfaces. When the blue mark is used on a dark interface, place it on the approved white rounded-square carrier.
+- Place the logo with adequate clear space. Supporting module text may appear beside it but must not overlap the mark.
 
 ## Typography and numbers
 
