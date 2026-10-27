@@ -85,7 +85,7 @@ This is currently a read integration. Price edits, reconciliation actions, expor
 
 The Partner Desk is a separate module, but uses the same Supabase project and authorised user profiles as Management. Its database migrations create the partner desk tables, initialise the ten partner desks, add `profiles.partner_id`, and apply Row Level Security so an exchange partner can only see its own desk while Management can oversee every desk.
 
-New partners register at `/partner-desk/register.html` using a company email and confirm the address with a six-digit email PIN. The account remains inactive until a Management user reviews the request in **Partner Access Requests**, assigns the correct exchange desk, and approves it. Approval activates the partner profile; rejection keeps the profile disabled and records the decision in the audit trail. Password recovery starts at `/partner-desk/forgot-password.html` and completes at `/partner-desk/reset-password.html`.
+New partners register at `/partner-desk/register.html` using a company email and confirm the address with a six-digit email PIN. The account remains inactive until a Management user opens **OTC Partner Desk → Access Requests**, assigns the correct exchange desk, and approves it. Partner overview and access governance share one dashboard rather than separate sidebar modules. Approval activates the partner profile; rejection keeps the profile disabled and records the decision in the audit trail. Password recovery starts at `/partner-desk/forgot-password.html` and completes at `/partner-desk/reset-password.html`.
 
 ### Six-digit email verification PIN
 
