@@ -143,6 +143,30 @@
     };
   }
 
+  function mapPartnerAccessRequest(row) {
+    return {
+      id: row.id,
+      userId: row.user_id,
+      email: row.corporate_email,
+      company: row.company_name,
+      contact: row.contact_name,
+      position: row.position_title,
+      phone: row.phone || "—",
+      requestedPartnerId: row.requested_partner_id || "",
+      assignedPartnerId: row.assigned_partner_id || row.requested_partner_id || "",
+      status: titleCase(row.status || "pending"),
+      reviewNote: row.review_note || "",
+      createdAt: formatDate(row.created_at),
+      reviewedAt: formatDate(row.reviewed_at),
+    };
+  }
+
+  async function loadPartnerAccessRequests() {
+    const { data, error } = await client.from("partner_access_requests").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data || []).map(mapPartnerAccessRequest);
+  }
+
   function mapPartner(row) {
     const id = String(first(row, ["partner_id", "exchange_id", "id"]));
     const buy = number(first(row, ["buy_price", "buy"]));
@@ -245,10 +269,10 @@
   }
 
   async function loadOperationsData() {
-    const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
+    const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto, partnerAccessRows, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
       optionalTable("transactions"), optionalTable("clients"), optionalTable("fiat_legs"), optionalTable("crypto_legs"),
       optionalTable("partner_quotes"), optionalTable("partner_desks"), optionalTable("partner_desk_quotes"), optionalTable("partner_desk_wallets"),
-      optionalTable("partner_desk_fiat_settlements"), optionalTable("partner_desk_crypto_settlements"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
+      optionalTable("partner_desk_fiat_settlements"), optionalTable("partner_desk_crypto_settlements"), optionalTable("partner_access_requests"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
       optionalTable("audit_events"), optionalTable("asset_rates"), optionalTable("bank_accounts"), optionalTable("crypto_wallets"),
     ]);
     const clientNames = new Map(clientRows.map((row) => [String(first(row, ["id", "client_id"])), first(row, ["entity_name", "client_name", "name", "legal_name"], "Institutional client")]));
@@ -263,6 +287,7 @@
       partners: partnerDeskRows.length
         ? partnerDeskRows.map((desk) => mapPartnerDesk(desk, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto))
         : partnerRows.map(mapPartner),
+      partnerAccessRequests: partnerAccessRows.map(mapPartnerAccessRequest),
       bankReconciliation: reconciliationRows.map(mapReconciliation).filter((row) => row.scope !== "Wallet"),
       walletReconciliation: reconciliationRows.map(mapReconciliation).filter((row) => row.scope === "Wallet"),
       incidents: reconciliationRows.filter((row) => number(first(row, ["difference", "variance"])) !== 0).map((row) => ({
@@ -279,5 +304,5 @@
     };
   }
 
-  window.LBPManagementData = { loadOperationsData, loadTransactions };
+  window.LBPManagementData = { loadOperationsData, loadTransactions, loadPartnerAccessRequests };
 })();

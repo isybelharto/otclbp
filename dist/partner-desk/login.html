@@ -4,28 +4,42 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>LBP OTC Partner Desk Access</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/partner-desk.css?v=20261027-tabs">
+  <link rel="stylesheet" href="css/partner-desk.css?v=20261027-access">
 </head>
-<body>
-  <main class="partner-page" style="max-width:560px;padding-top:10vh">
-    <section class="partner-card partner-section">
-      <header class="partner-card-head"><div><h1>Secure Partner Desk Access</h1><p>Sign in with the approved exchange partner email.</p></div></header>
-      <form id="partner-login-form" class="partner-config-fields" style="padding:24px">
-        <label>Email<input id="partner-email" type="email" required autocomplete="email"></label>
-        <label>Password<input id="partner-password" type="password" required autocomplete="current-password"></label>
+<body class="partner-auth-body">
+  <main class="partner-auth-shell">
+    <section class="partner-auth-brand"><span class="partner-brand-mark">LBP</span><div><strong>PT LINTAS BATAS PEMBAYARAN</strong><small>OTC PARTNER DESK</small></div></section>
+    <section class="partner-card partner-auth-card">
+      <header class="partner-card-head"><div><span class="partner-eyebrow">Secure institutional access</span><h1>Sign in to Partner Desk</h1><p>Use the company email approved by LBP Management.</p></div></header>
+      <form id="partner-login-form" class="partner-auth-form">
+        <label>Company Email<input id="partner-email" type="email" required autocomplete="username" placeholder="name@company.com"></label>
+        <label>Password<input id="partner-password" type="password" required autocomplete="current-password" placeholder="Enter password"></label>
         <button class="partner-config-save" type="submit">Sign in to Partner Desk</button>
-        <p id="partner-login-error" role="alert"></p>
+        <p id="partner-login-status" class="partner-auth-status" role="status"></p>
       </form>
+      <div class="partner-auth-links"><a href="forgot-password.html">Forgot password?</a><button id="forgot-user-id" type="button">Forgot User ID?</button></div>
+      <div class="partner-userid-help" id="partner-userid-help" hidden><strong>Your User ID is your approved company email.</strong><p>If you no longer know which email was registered, contact your company administrator or LBP Management. Account existence is never disclosed publicly.</p></div>
+      <footer class="partner-auth-footer">New exchange partner? <a href="register.html">Register for access</a></footer>
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/partner-desk-supabase.js?v=20261027-tabs"></script>
+  <script src="js/partner-desk-supabase.js?v=20261027-access"></script>
   <script>
-    document.querySelector('#partner-login-form').addEventListener('submit', async event => {
-      event.preventDefault(); const error=document.querySelector('#partner-login-error'); error.textContent='';
-      const { error: signInError }=await window.LBPPartnerDeskSupabase.client.auth.signInWithPassword({email:document.querySelector('#partner-email').value,password:document.querySelector('#partner-password').value});
-      if(signInError){error.textContent=signInError.message;return} const access=await window.LBPPartnerDeskSupabase.sessionProfile();
-      if(!access){await window.LBPPartnerDeskSupabase.client.auth.signOut();error.textContent='This account has no active Partner Desk or Management access.';return} location.replace('./');
+    const status=document.querySelector('#partner-login-status'),query=new URLSearchParams(location.search);
+    if(query.get('verified')){status.textContent='Email verified. Your request remains subject to Management approval.';status.className='partner-auth-status success'}
+    document.querySelector('#forgot-user-id').onclick=()=>{const panel=document.querySelector('#partner-userid-help');panel.hidden=!panel.hidden};
+    document.querySelector('#partner-login-form').addEventListener('submit',async event=>{
+      event.preventDefault();status.textContent='Checking access…';status.className='partner-auth-status';
+      const email=document.querySelector('#partner-email').value.trim(),password=document.querySelector('#partner-password').value;
+      const {data,error}=await window.LBPPartnerDeskSupabase.client.auth.signInWithPassword({email,password});
+      if(error){status.textContent='The email or password is incorrect.';status.className='partner-auth-status error';return}
+      const access=await window.LBPPartnerDeskSupabase.sessionProfile();if(access){location.replace('./');return}
+      let request=null;try{request=await window.LBPPartnerDeskSupabase.accessRequestStatus(data.user.id)}catch(requestError){console.warn(requestError)}
+      await window.LBPPartnerDeskSupabase.client.auth.signOut();
+      if(request?.status==='pending')status.textContent='Your email is verified, but Management approval is still pending.';
+      else if(request?.status==='rejected')status.textContent=request.review_note||'This access request was not approved. Contact LBP Management.';
+      else status.textContent='This account has no active Partner Desk access.';
+      status.className='partner-auth-status error';
     });
   </script>
 </body>

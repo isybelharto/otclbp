@@ -14,6 +14,7 @@ Institutional OTC brokerage and settlement interface for PT Lintas Batas Pembaya
 - Collapsible Management sidebar with icon-only mode, browser-local preference storage, and Flaticon UIcons attribution.
 - USD/IDR public reference-rate indicator with an indicative fallback. It is not an executable OTC quote.
 - A separate authenticated Partner Desk module at `dist/partner-desk/` for partner quote submissions, available liquidity, settlement-account and wallet registers, and fiat/crypto settlement history.
+- A company-email Partner Desk registration and recovery flow with Management approval before desk access is activated.
 
 ## Technology
 
@@ -72,6 +73,7 @@ The Management module is self-contained in `dist/management/`, with all of its s
 - `clients` → B2B / Corporate Clients and KYC register
 - `partner_quotes` → OTC Partner Desk
 - `partner_desks` and `partner_desk_quotes` → authenticated Partner Desk module and Management OTC Partner Desk overview
+- `partner_access_requests` → Management approval queue for Partner Desk registrations
 - `bank_accounts`, `crypto_wallets`, `asset_rates` → AUM / Managed Assets
 - `reconciliation_entries` → Reconciliation
 - `aml_alerts` → KYC / AML monitoring
@@ -81,9 +83,14 @@ This is currently a read integration. Price edits, reconciliation actions, expor
 
 ## Partner Desk database setup
 
-The Partner Desk is a separate module, but uses the same Supabase project and authorised user profiles as Management. Run [`supabase/migrations/20261027_partner_desk_module.sql`](supabase/migrations/20261027_partner_desk_module.sql) once in the Supabase SQL Editor before using it. The migration creates the partner desk tables, initialises the ten partner desks, adds `profiles.partner_id`, and applies Row Level Security so an exchange partner can only see its own desk while Management can oversee every desk.
+The Partner Desk is a separate module, but uses the same Supabase project and authorised user profiles as Management. Its database migrations create the partner desk tables, initialise the ten partner desks, add `profiles.partner_id`, and apply Row Level Security so an exchange partner can only see its own desk while Management can oversee every desk.
 
-To provision a partner user, create the user in Supabase Authentication and add an active profile with `role = 'partner'` and the matching `partner_id` such as `btse`. Partner users sign in at `/partner-desk/login.html`; Management users may use the same module to review all authorised desks.
+New partners register at `/partner-desk/register.html` using a company email. The account remains inactive until a Management user reviews the request in **Partner Access Requests**, assigns the correct exchange desk, and approves it. Approval activates the partner profile; rejection keeps the profile disabled and records the decision in the audit trail. Password recovery starts at `/partner-desk/forgot-password.html` and completes at `/partner-desk/reset-password.html`.
+
+Supabase Authentication must allow these production redirect URLs:
+
+- `https://management.ptlbp.co.id/partner-desk/login.html`
+- `https://management.ptlbp.co.id/partner-desk/reset-password.html`
 
 ## Local use
 

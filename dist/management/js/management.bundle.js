@@ -1,5 +1,3 @@
-/* Source: dist\management\js\supabase-config.js */
-
 (function initialiseLbpSupabase() {
   "use strict";
 
@@ -20,9 +18,6 @@
     },
   });
 })();
-
-
-/* Source: dist\management\js\supabase-auth.js */
 
 (function initialiseLbpManagementAuth() {
   "use strict";
@@ -119,9 +114,6 @@
     ? Promise.resolve(null)
     : requireManagement();
 })();
-
-
-/* Source: dist\management\js\supabase-data.js */
 
 (function initialiseLbpManagementData() {
   "use strict";
@@ -268,6 +260,30 @@
     };
   }
 
+  function mapPartnerAccessRequest(row) {
+    return {
+      id: row.id,
+      userId: row.user_id,
+      email: row.corporate_email,
+      company: row.company_name,
+      contact: row.contact_name,
+      position: row.position_title,
+      phone: row.phone || "—",
+      requestedPartnerId: row.requested_partner_id || "",
+      assignedPartnerId: row.assigned_partner_id || row.requested_partner_id || "",
+      status: titleCase(row.status || "pending"),
+      reviewNote: row.review_note || "",
+      createdAt: formatDate(row.created_at),
+      reviewedAt: formatDate(row.reviewed_at),
+    };
+  }
+
+  async function loadPartnerAccessRequests() {
+    const { data, error } = await client.from("partner_access_requests").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data || []).map(mapPartnerAccessRequest);
+  }
+
   function mapPartner(row) {
     const id = String(first(row, ["partner_id", "exchange_id", "id"]));
     const buy = number(first(row, ["buy_price", "buy"]));
@@ -370,10 +386,10 @@
   }
 
   async function loadOperationsData() {
-    const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
+    const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto, partnerAccessRows, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
       optionalTable("transactions"), optionalTable("clients"), optionalTable("fiat_legs"), optionalTable("crypto_legs"),
       optionalTable("partner_quotes"), optionalTable("partner_desks"), optionalTable("partner_desk_quotes"), optionalTable("partner_desk_wallets"),
-      optionalTable("partner_desk_fiat_settlements"), optionalTable("partner_desk_crypto_settlements"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
+      optionalTable("partner_desk_fiat_settlements"), optionalTable("partner_desk_crypto_settlements"), optionalTable("partner_access_requests"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
       optionalTable("audit_events"), optionalTable("asset_rates"), optionalTable("bank_accounts"), optionalTable("crypto_wallets"),
     ]);
     const clientNames = new Map(clientRows.map((row) => [String(first(row, ["id", "client_id"])), first(row, ["entity_name", "client_name", "name", "legal_name"], "Institutional client")]));
@@ -388,6 +404,7 @@
       partners: partnerDeskRows.length
         ? partnerDeskRows.map((desk) => mapPartnerDesk(desk, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto))
         : partnerRows.map(mapPartner),
+      partnerAccessRequests: partnerAccessRows.map(mapPartnerAccessRequest),
       bankReconciliation: reconciliationRows.map(mapReconciliation).filter((row) => row.scope !== "Wallet"),
       walletReconciliation: reconciliationRows.map(mapReconciliation).filter((row) => row.scope === "Wallet"),
       incidents: reconciliationRows.filter((row) => number(first(row, ["difference", "variance"])) !== 0).map((row) => ({
@@ -404,11 +421,8 @@
     };
   }
 
-  window.LBPManagementData = { loadOperationsData, loadTransactions };
+  window.LBPManagementData = { loadOperationsData, loadTransactions, loadPartnerAccessRequests };
 })();
-
-
-/* Source: dist\partner-desk\js\partner-desk-data.js */
 
 (function(){
   const storageKey="lbp-otc-partner-desks-v1";
@@ -435,9 +449,6 @@
   window.LBPPartnerDeskStore={getPartners:()=>state.partners,getPartner,updatePartner,persist,setPartners,reset:()=>{state={partners:defaults()};persist();return state.partners}};
 })();
 
-
-/* Source: dist\management\js\management-admin.js */
-
 const ledger=[
  {id:"OTC-2026-0218",date:"24 Oct 2026 14:42",client:"Garuda Prima Capital",type:"Fiat → Crypto",asset:"USDT",fiatIn:46200000000,fiatOut:0,cryptoIn:0,cryptoOut:2915000,rate:15849,desk:"Desk 01",status:"Settled",kyc:"Verified",aml:"Clear",lp:"LP-001",bank:"MDR-20261024-8812",txid:"a4c9…8f1e"},
  {id:"OTC-2026-0217",date:"24 Oct 2026 11:16",client:"Nusantara Infrastruktur",type:"Crypto → Fiat",asset:"USDC",fiatIn:0,fiatOut:31800000000,cryptoIn:2000000,cryptoOut:0,rate:15875,desk:"Desk 03",status:"Reconciled",kyc:"Verified",aml:"Clear",lp:"LP-002",bank:"BCA-20261024-2201",txid:"f7d1…92bc"},
@@ -458,7 +469,7 @@ const pill=v=>`<span class="pill ${String(v).toLowerCase().replace(/\s/g,"")}">$
 const rows=(cols,data,clickable=false)=>`<div class="table-wrap"><table class="table"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>${data.map((r,i)=>`<tr ${clickable?`data-id="${ledger[i].id}"`:""}>${r.map((c,j)=>`<td class="${j===0?"mono":""}">${j===r.length-1&&["Settled","Reconciled","Processing","Pending","Exception","Clear","Verified","Active","Review","Hold"].includes(c)?pill(c):c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
 const txLink=r=>`<button class="tx-link" type="button" data-id="${r.id}" aria-label="Open detail for ${r.id}">${r.id}</button>`;
 const app=document.querySelector("#admin-app");
-app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="assets/lbp-crypto-fiat-logo.png" alt="LBP"><div>PT LINTAS BATAS<small>PEMBAYARAN · OTC</small></div></div><div class="nav-label">OPERATIONS</div><button class="nav active" data-view="dashboard"><span>▦</span>Dashboard</button><button class="nav" data-view="ledger"><span>▤</span>Transaction Ledger</button><button class="nav" data-view="fiat"><span>Rp</span>Fiat Ledger</button><button class="nav" data-view="crypto"><span>₮</span>Crypto Ledger</button><div class="nav-label">BUSINESS</div><button class="nav" data-view="clients"><span>◫</span>B2B Corporate Clients</button><button class="nav" data-view="desks"><span>◉</span>OTC Desks 01–05</button><button class="nav" data-view="aum"><span>◈</span>AUM Managed Assets</button><div class="nav-label">CONTROL</div><button class="nav" data-view="reports"><span>▥</span>Reports</button><button class="nav" data-view="reconciliation"><span>↻</span>Reconciliation</button><button class="nav" data-view="compliance"><span>✓</span>KYC AML Monitoring</button><button class="nav" data-view="exports"><span>↓</span>Export Center</button><button class="nav" data-view="audit"><span>◌</span>Audit Trail</button><button class="nav" data-view="settings"><span>⚙</span>Settings</button><div class="side-note">Management has complete visibility. Production implementation requires governed data, role enforcement and immutable server-side audit records.</div></aside><button class="mobile-sidebar-backdrop" id="mobile-sidebar-backdrop" type="button" aria-label="Close navigation"></button><main class="main"><header class="top"><div class="top-public-link"><button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Open navigation" aria-controls="management-sidebar" aria-expanded="false"><i class="fi fi-rr-menu-burger" aria-hidden="true"></i></button><a href="https://ptlbp.co.id/">← Back to public landing page</a></div><div class="top-actions"><div class="fx-rate" aria-live="polite"><span class="fx-dot"></span><div><small>USD / IDR · LIVE REFERENCE</small><strong id="usd-idr-rate">1 USD = Rp 15,850</strong></div><time id="usd-idr-time">Updating…</time></div><button class="profile role-switcher" id="role-switcher" type="button" aria-haspopup="dialog" title="Switch role">Management / Super Admin <i class="fi fi-rr-angle-small-down" aria-hidden="true"></i><span class="avatar">LBP</span></button></div></header><section class="content"><div id="view"></div></section></main></div><div class="modal" id="modal" hidden></div>`;
+app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="assets/lbp-crypto-fiat-logo.png" alt="LBP"><div>PT LINTAS BATAS<small>PEMBAYARAN · OTC</small></div></div><div class="nav-label">OPERATIONS</div><button class="nav active" data-view="dashboard"><span>▦</span>Dashboard</button><button class="nav" data-view="ledger"><span>▤</span>Transaction Ledger</button><button class="nav" data-view="fiat"><span>Rp</span>Fiat Ledger</button><button class="nav" data-view="crypto"><span>₮</span>Crypto Ledger</button><div class="nav-label">BUSINESS</div><button class="nav" data-view="clients"><span>◫</span>B2B Corporate Clients</button><button class="nav" data-view="desks"><span>◉</span>OTC Partner Desk</button><button class="nav" data-view="partnerAccess"><span>◎</span>Partner Access Requests</button><button class="nav" data-view="aum"><span>◈</span>AUM Managed Assets</button><div class="nav-label">CONTROL</div><button class="nav" data-view="reports"><span>▥</span>Reports</button><button class="nav" data-view="reconciliation"><span>↻</span>Reconciliation</button><button class="nav" data-view="compliance"><span>✓</span>KYC AML Monitoring</button><button class="nav" data-view="exports"><span>↓</span>Export Center</button><button class="nav" data-view="audit"><span>◌</span>Audit Trail</button><button class="nav" data-view="settings"><span>⚙</span>Settings</button><div class="side-note">Management has complete visibility. Production implementation requires governed data, role enforcement and immutable server-side audit records.</div></aside><button class="mobile-sidebar-backdrop" id="mobile-sidebar-backdrop" type="button" aria-label="Close navigation"></button><main class="main"><header class="top"><div class="top-public-link"><button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Open navigation" aria-controls="management-sidebar" aria-expanded="false"><i class="fi fi-rr-menu-burger" aria-hidden="true"></i></button><a href="https://ptlbp.co.id/">← Back to public landing page</a></div><div class="top-actions"><div class="fx-rate" aria-live="polite"><span class="fx-dot"></span><div><small>USD / IDR · LIVE REFERENCE</small><strong id="usd-idr-rate">1 USD = Rp 15,850</strong></div><time id="usd-idr-time">Updating…</time></div><button class="profile role-switcher" id="role-switcher" type="button" aria-haspopup="dialog" title="Switch role">Management / Super Admin <i class="fi fi-rr-angle-small-down" aria-hidden="true"></i><span class="avatar">LBP</span></button></div></header><section class="content"><div id="view"></div></section></main></div><div class="modal" id="modal" hidden></div>`;
 const view=document.querySelector("#view"),modal=document.querySelector("#modal");
 const roleOptions=[
  {key:"management",label:"Management / Super Admin"},
@@ -474,6 +485,7 @@ const roleModules=[
  ["Crypto Ledger",[1,0,1,0,0]],
  ["B2B / Corporate Clients",[1,1,0,1,0]],
  ["OTC Desk 01–05",[1,1,0,0,0]],
+ ["Partner Access Requests",[1,0,0,0,0]],
  ["Reports",[1,1,1,1,1]],
  ["AUM / Managed Assets",[1,0,1,0,0]],
  ["Reconciliation",[1,0,1,0,0]],
@@ -628,7 +640,9 @@ const auditTrail=[
 function auditTrailRows(records){return records.map(entry=>`<tr><td>${entry.timestamp}</td><td>${entry.user}</td><td class="audit-role">${entry.role}</td><td class="audit-action">${entry.action}</td><td class="audit-object">${entry.object}</td><td class="audit-old">${entry.oldValue}</td><td class="audit-new">${entry.newValue}</td></tr>`).join("")}
 function filterAuditTrail(){const action=document.querySelector("#audit-action-filter").value,query=document.querySelector("#audit-search").value.toLowerCase(),records=auditTrail.filter(entry=>(!action||entry.action===action)&&(!query||Object.values(entry).join(" ").toLowerCase().includes(query)));document.querySelector("#audit-entry-count").textContent=`${records.length} entries`;document.querySelector("#audit-table-body").innerHTML=auditTrailRows(records)}
 function exportAuditCsv(){const records=auditTrail.map(entry=>[entry.timestamp,entry.user,entry.role,entry.action,entry.object,entry.oldValue,entry.newValue]),csv=[["Timestamp","User","Active role","Action","Object","Old value","New value"],...records].map(row=>row.map(value=>`"${String(value).replaceAll('"','""')}"`).join(",")).join("\\n"),file=new Blob([csv],{type:"text/csv"}),link=document.createElement("a");link.href=URL.createObjectURL(file);link.download="lbp-audit-trail.csv";link.click();URL.revokeObjectURL(link.href)}
-function auditTrailView(){const actions=[...new Set(auditTrail.map(entry=>entry.action))];view.innerHTML=title("Audit Trail","No permanent deletion. Use Void / Cancel / Reversal with reason and approval.",`<button class="button ghost audit-export" id="audit-csv"><i class="fi fi-rr-download" aria-hidden="true"></i>CSV</button>`)+`<div class="kpis audit-kpis"><div class="kpi"><label>Audit Trail</label><strong>${auditTrail.length}</strong></div><div class="kpi"><label>Void / Reversal</label><strong>${auditTrail.filter(entry=>/VOID|REVERSAL/.test(entry.action)).length}</strong></div><div class="kpi"><label>Hard Deletes</label><strong>0</strong></div></div><section class="card audit-log"><div class="audit-filters"><label>Action<select id="audit-action-filter"><option value="">All</option>${actions.map(action=>`<option value="${action}">${action}</option>`).join("")}</select></label><label>Search TX ID / Client / Bank Ref / TXID<input id="audit-search" placeholder="Search audit trail"></label></div><header class="audit-log-head"><h2 id="audit-entry-count">${auditTrail.length} entries</h2><span><i class="fi fi-rr-lock" aria-hidden="true"></i> immutable</span></header><div class="table-wrap"><table class="audit-table"><thead><tr><th>Timestamp</th><th>User</th><th>Active Role</th><th>Action</th><th>Object</th><th>Old Value</th><th>New Value</th></tr></thead><tbody id="audit-table-body">${auditTrailRows(auditTrail)}</tbody></table></div></section>`;document.querySelector("#audit-action-filter").onchange=filterAuditTrail;document.querySelector("#audit-search").oninput=filterAuditTrail;document.querySelector("#audit-csv").onclick=exportAuditCsv}const partnerDesks=window.LBPPartnerDeskStore?window.LBPPartnerDeskStore.getPartners():[];
+function auditTrailView(){const actions=[...new Set(auditTrail.map(entry=>entry.action))];view.innerHTML=title("Audit Trail","No permanent deletion. Use Void / Cancel / Reversal with reason and approval.",`<button class="button ghost audit-export" id="audit-csv"><i class="fi fi-rr-download" aria-hidden="true"></i>CSV</button>`)+`<div class="kpis audit-kpis"><div class="kpi"><label>Audit Trail</label><strong>${auditTrail.length}</strong></div><div class="kpi"><label>Void / Reversal</label><strong>${auditTrail.filter(entry=>/VOID|REVERSAL/.test(entry.action)).length}</strong></div><div class="kpi"><label>Hard Deletes</label><strong>0</strong></div></div><section class="card audit-log"><div class="audit-filters"><label>Action<select id="audit-action-filter"><option value="">All</option>${actions.map(action=>`<option value="${action}">${action}</option>`).join("")}</select></label><label>Search TX ID / Client / Bank Ref / TXID<input id="audit-search" placeholder="Search audit trail"></label></div><header class="audit-log-head"><h2 id="audit-entry-count">${auditTrail.length} entries</h2><span><i class="fi fi-rr-lock" aria-hidden="true"></i> immutable</span></header><div class="table-wrap"><table class="audit-table"><thead><tr><th>Timestamp</th><th>User</th><th>Active Role</th><th>Action</th><th>Object</th><th>Old Value</th><th>New Value</th></tr></thead><tbody id="audit-table-body">${auditTrailRows(auditTrail)}</tbody></table></div></section>`;document.querySelector("#audit-action-filter").onchange=filterAuditTrail;document.querySelector("#audit-search").oninput=filterAuditTrail;document.querySelector("#audit-csv").onclick=exportAuditCsv}
+const partnerDesks=window.LBPPartnerDeskStore?window.LBPPartnerDeskStore.getPartners():[];
+const partnerAccessRequests=[];
 const deskAuditLog=[];
 function partnerCalculation(desk){const buy=Number(desk.buy),sell=Number(desk.sell),spread=Number(desk.spread),fee=Number(desk.fee);if(![buy,sell,spread,fee].every(Number.isFinite)||buy<=0||sell<=0)return null;const adjustment=(spread+fee)/100,gross=sell-buy;return{clientBuy:buy*(1+adjustment),clientSell:sell*(1-adjustment),gross,margin:(gross/buy*100)+fee}}
 function partnerValue(value){return Number.isFinite(value)?`Rp ${Math.round(value).toLocaleString("en-US")}`:"—"}
@@ -639,6 +653,10 @@ function deskLiquidity(desk){const liquidity=desk.liquidity||{},items=[];if(Numb
 function deskMaskedWallet(desk){const wallet=desk.wallet||{},address=String(wallet.address||"").trim();if(!address)return `<span class="desk-empty-value">—</span>`;const compact=address.replace(/\s/g,"");const masked=compact.length>8?`${compact.slice(0,4)}…${compact.slice(-4)}`:compact;return `<span class="desk-wallet-address">${masked}</span><small>${wallet.asset||""}${wallet.network&&wallet.network!=="—"?` · ${wallet.network}`:""}</small>`}
 function partnerDeskRow(desk){return `<tr><td><a class="desk-exchange-link" href="../partner-desk/?partner=${desk.id}"><i class="fi fi-rr-building" aria-hidden="true"></i><span><strong>${desk.name}</strong><small>${desk.lastUpdated||"Awaiting update"}</small></span></a></td><td class="desk-buy">${Number(desk.buy)?money(Number(desk.buy)):"—"}</td><td class="desk-sell">${Number(desk.sell)?money(Number(desk.sell)):"—"}</td><td>${Number(desk.spread||0).toFixed(3)}%</td><td>${Number(desk.fee||0).toFixed(3)}%</td><td class="desk-stack">${deskLiquidity(desk)}</td><td class="desk-wallet">${deskMaskedWallet(desk)}</td><td class="desk-stack">${deskGroupedVolumes(desk.settledFiat,true)}</td><td class="desk-stack">${deskGroupedVolumes(desk.settledCrypto)}</td></tr>`}
 function deskView(){const tableRows=partnerDesks.map(partnerDeskRow).join("");view.innerHTML=title("OTC Partner Desk","Read-only consolidated partner quotes, liquidity, settlement wallets, and settled volumes from Supabase.")+`<section class="card partner-desk-table-card"><header><div><h2>Partner Exchange Overview</h2><p>One exchange per row. Prices and operating balances are supplied by each authorised partner.</p></div><span class="eyebrow">${partnerDesks.length} exchanges</span></header><div class="table-wrap"><table class="partner-desk-table"><thead><tr><th>Exchange</th><th>Buy Price</th><th>Sell Price</th><th>Spread</th><th>Fee</th><th>Available Liquidity</th><th>Crypto Wallet</th><th>Settled Fiat Volume</th><th>Settled Crypto Volume</th></tr></thead><tbody>${tableRows||`<tr><td colspan="9" class="empty">No partner desk data available.</td></tr>`}</tbody></table></div></section>`}
+const accessSafe=value=>String(value??"").replace(/[&<>"']/g,character=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[character]);
+function partnerAccessRows(){return partnerAccessRequests.map(request=>{const selected=request.assignedPartnerId||request.requestedPartnerId,options=partnerDesks.map(desk=>`<option value="${accessSafe(desk.id)}" ${desk.id===selected?"selected":""}>${accessSafe(desk.name)}</option>`).join(""),pending=request.status.toLowerCase()==="pending";return `<tr data-access-request="${accessSafe(request.id)}"><td><strong>${accessSafe(request.company)}</strong><small>${accessSafe(request.position)}</small></td><td><strong>${accessSafe(request.contact)}</strong><small>${accessSafe(request.email)}</small></td><td>${accessSafe(request.phone)}</td><td><select class="access-partner-select" aria-label="Assigned partner desk"><option value="">Select partner</option>${options}</select></td><td>${pill(request.status)}</td><td>${accessSafe(request.createdAt)}</td><td class="access-actions">${pending?`<button type="button" class="access-approve" data-access-action="approved">Approve</button><button type="button" class="access-reject" data-access-action="rejected">Reject</button>`:`<span>${accessSafe(request.reviewedAt||"Reviewed")}</span>`}</td></tr>`}).join("")}
+async function reviewPartnerAccess(requestId,status){const row=document.querySelector(`[data-access-request="${requestId}"]`),partnerId=row?.querySelector(".access-partner-select")?.value||"";if(status==="approved"&&!partnerId){alert("Select the partner exchange before approving access.");return}const request=partnerAccessRequests.find(item=>item.id===requestId),note=status==="rejected"?(prompt("Reason for rejection (visible to the applicant):",request?.reviewNote||"")||"").trim():"Approved by Management";if(status==="rejected"&&!note)return;row.querySelectorAll("button,select").forEach(control=>control.disabled=true);const {error}=await window.LBPSupabase.from("partner_access_requests").update({status,assigned_partner_id:status==="approved"?partnerId:null,review_note:note}).eq("id",requestId);if(error){alert(error.message);row.querySelectorAll("button,select").forEach(control=>control.disabled=false);return}const refreshed=await window.LBPManagementData.loadPartnerAccessRequests();partnerAccessRequests.splice(0,partnerAccessRequests.length,...refreshed);partnerAccessView()}
+function partnerAccessView(){const pending=partnerAccessRequests.filter(item=>item.status.toLowerCase()==="pending").length,approved=partnerAccessRequests.filter(item=>item.status.toLowerCase()==="approved").length,rejected=partnerAccessRequests.filter(item=>item.status.toLowerCase()==="rejected").length;view.innerHTML=title("Partner Access Requests","Review company-email registrations before granting access to an exchange desk.")+`<div class="kpis access-kpis"><div class="kpi"><label>Pending Review</label><strong>${pending}</strong><span>Requires Management decision</span></div><div class="kpi"><label>Approved</label><strong>${approved}</strong><span>Active Partner Desk profiles</span></div><div class="kpi"><label>Rejected</label><strong>${rejected}</strong><span>Access remains disabled</span></div></div><section class="card access-request-card"><header><div><h2>Registration Queue</h2><p>Verify company identity and exchange assignment before approval.</p></div><a class="button ghost" href="../partner-desk/register.html" target="_blank" rel="noopener">Open Registration Form</a></header><div class="table-wrap"><table class="access-request-table"><thead><tr><th>Company</th><th>Applicant</th><th>Phone</th><th>Partner Desk</th><th>Status</th><th>Requested</th><th>Decision</th></tr></thead><tbody>${partnerAccessRows()||`<tr><td colspan="7" class="empty">No partner access requests.</td></tr>`}</tbody></table></div></section>`;document.querySelectorAll("[data-access-action]").forEach(button=>button.onclick=()=>reviewPartnerAccess(button.closest("tr").dataset.accessRequest,button.dataset.accessAction))}
 function updatePartnerDesk(id){const desk=partnerDesks.find(item=>item.id===id),card=document.querySelector(`[data-partner-card="${id}"]`);if(!desk||!card)return;card.querySelectorAll("[data-partner-input]").forEach(input=>desk[input.dataset.partnerInput]=input.value);const calc=partnerCalculation(desk),setMetric=(name,value)=>card.querySelector(`[data-partner-metric="${name}"]`).textContent=value;setMetric("clientBuy",calc?partnerValue(calc.clientBuy):"—");setMetric("clientSell",calc?partnerValue(calc.clientSell):"—");setMetric("gross",calc?partnerValue(calc.gross):"—");setMetric("grossRate",calc?partnerPercent(calc.gross/Number(desk.buy)*100):"Awaiting prices");setMetric("margin",calc?partnerPercent(calc.margin):"—")}
 function savePartnerDesk(id){const desk=partnerDesks.find(item=>item.id===id),calc=partnerCalculation(desk);if(!calc){alert("Enter buy price, sell price, spread, and fee before saving the partner configuration.");return}desk.status="Configured";if(window.LBPPartnerDeskStore)window.LBPPartnerDeskStore.updatePartner(id,{buy:desk.buy,sell:desk.sell,spread:desk.spread,fee:desk.fee,status:desk.status});deskAuditLog.unshift({time:new Intl.DateTimeFormat("id-ID",{dateStyle:"medium",timeStyle:"short"}).format(new Date()),partner:desk.name,detail:`Buy ${partnerValue(Number(desk.buy))} · Sell ${partnerValue(Number(desk.sell))} · Spread ${desk.spread}% · Fee ${desk.fee}%`});const card=document.querySelector(`[data-partner-card="${id}"]`),status=card.querySelector("[data-partner-status]");status.textContent=desk.status;status.classList.add("configured")}
 function openDeskAudit(){modal.hidden=false;modal.innerHTML=`<article class="dialog" role="dialog" aria-modal="true" aria-label="OTC partner desk audit log"><header class="dialog-head"><div><h2>OTC Partner Desk Audit Log</h2><p class="sub">Local configuration changes only</p></div><button class="close" id="close-desk-audit" aria-label="Close audit log">×</button></header><div class="desk-audit-list">${deskAuditLog.length?deskAuditLog.map(item=>`<div><time>${item.time}</time><span>${item.partner}<br><small>${item.detail}</small></span><b>Saved</b></div>`).join(""):`<div><span>No partner configuration has been saved yet.</span></div>`}</div><footer class="dialog-footer"><button class="button ghost" id="close-desk-audit-footer">Close</button></footer></article>`;const close=()=>modal.hidden=true;document.querySelector("#close-desk-audit").onclick=close;document.querySelector("#close-desk-audit-footer").onclick=close;modal.onclick=event=>{if(event.target===modal)close()}}
@@ -730,7 +748,7 @@ async function refreshLiveRates(){const fetchJson=async url=>{const response=awa
 function loadSettingRates(){return settingsAssetRates}
 function saveSettingRates(){}
 function settings(){const rates=loadSettingRates(),rateRows=Object.entries(rates).map(([asset,rate])=>`<tr><td class="settings-asset">${asset}</td><td><input class="settings-rate-input" type="number" readonly min="0" step="${asset==="BTC"?"1000":"1"}" value="${rate}" data-rate-asset="${asset}" aria-label="${asset} live IDR reference rate"></td><td class="settings-equivalent" id="settings-equivalent-${asset}">${money(Number(rate))}</td></tr>`).join(""),deskRows=partnerDesks.map(desk=>{const liquidity=desk.liquidity||{},updated=desk.lastUpdated||"Awaiting partner update",quote=partnerReferenceQuote(desk);return `<tr><td class="settings-desk">${desk.name}</td><td>${desk.operator||"Partner Operations"}</td><td class="settings-money">${money(quote.buy)}</td><td class="settings-money">${money(quote.sell)}</td><td class="settings-money">${Number(desk.spread||0).toFixed(3)}%</td><td class="settings-money">${Number(desk.fee||0).toFixed(3)}%</td><td class="settings-money">${Number(liquidity.usdt||0).toLocaleString()} USDT</td><td>${updated}</td></tr>`}).join("");let defaultLanguage="English";try{defaultLanguage=localStorage.getItem("lbp-management-default-language")||"English"}catch(error){}view.innerHTML=title("Settings","OTC Brokerage & Institutional Settlement")+`<section class="card settings-card settings-rates"><header><div><h2>Exchange Rate Table</h2><p id="settings-live-rate-status">${liveRateState.source}</p></div><button class="button ghost" id="refresh-live-rates" type="button">↻ Refresh</button></header><div class="table-wrap"><table><thead><tr><th>Asset</th><th>IDR</th><th>IDR Equivalent</th></tr></thead><tbody>${rateRows}</tbody></table></div></section><section class="card settings-card settings-desks"><header><h2>OTC Partner Desk Configuration</h2><p>${binanceQuoteState.source}. This is an indicative market reference; partner execution quotes must be confirmed before settlement.</p></header><div class="table-wrap"><table><thead><tr><th>Exchange</th><th>Operator</th><th>Buy Price</th><th>Sell Price</th><th>Spread %</th><th>Fee %</th><th>Available USDT</th><th>Last Updated</th></tr></thead><tbody>${deskRows||`<tr><td colspan="8">No partner desk data available.</td></tr>`}</tbody></table></div></section><section class="card settings-card settings-language"><header><h2>Default Language</h2></header><label>Default language<select id="settings-default-language"><option ${defaultLanguage==="English"?"selected":""}>English</option><option ${defaultLanguage==="Bahasa Indonesia"?"selected":""}>Bahasa Indonesia</option></select></label></section>`;document.querySelector("#refresh-live-rates").onclick=refreshLiveRates;document.querySelector("#settings-default-language").onchange=event=>{try{localStorage.setItem("lbp-management-default-language",event.target.value)}catch(error){}}}
-function render(name){currentView=name;document.querySelectorAll(".nav").forEach(n=>n.classList.toggle("active",n.dataset.view===name));({dashboard,ledger:ledgerView,fiat:fiatView,crypto:cryptoView,clients:clientsView,desks:deskView,reports, aum,reconciliation:reconciliationView,compliance:kycMonitoringView,exports:exportsView,audit:auditTrailView,settings})[name]()}
+function render(name){currentView=name;document.querySelectorAll(".nav").forEach(n=>n.classList.toggle("active",n.dataset.view===name));({dashboard,ledger:ledgerView,fiat:fiatView,crypto:cryptoView,clients:clientsView,desks:deskView,partnerAccess:partnerAccessView,reports, aum,reconciliation:reconciliationView,compliance:kycMonitoringView,exports:exportsView,audit:auditTrailView,settings})[name]()}
 document.querySelectorAll(".nav").forEach(n=>n.onclick=()=>{render(n.dataset.view);setMobileNavigation(false)});
 
 function showDataLoadError(error){
@@ -754,6 +772,7 @@ async function bootstrapManagementLedger(){
     amlAlerts.splice(0,amlAlerts.length,...operations.alerts);
     auditTrail.splice(0,auditTrail.length,...operations.audits);
     partnerDesks.splice(0,partnerDesks.length,...operations.partners);
+    partnerAccessRequests.splice(0,partnerAccessRequests.length,...operations.partnerAccessRequests);
     if(Object.keys(operations.rates).length)Object.assign(settingsAssetRates,operations.rates);
     if(operations.reserves.length){aumReserves.splice(0,aumReserves.length,...operations.reserves.map(item=>({...item,rate:operations.rates[item.asset]||settingsAssetRates[item.asset]||1})));}
     window.LBPManagementLiveLegs={fiat:operations.fiatLegs,crypto:operations.cryptoLegs};

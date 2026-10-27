@@ -14,6 +14,77 @@
     return { session, profile };
   }
 
+  async function accessRequestStatus(userId) {
+    const { data, error } = await client
+      .from("partner_access_requests")
+      .select("id,corporate_email,company_name,requested_partner_id,assigned_partner_id,status,review_note,created_at,reviewed_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+
+  function corporateEmailError(email) {
+    const value = String(email || "").trim().toLowerCase();
+    const domain = value.split("@")[1] || "";
+    const blocked = new Set(["gmail.com","googlemail.com","yahoo.com","yahoo.co.id","outlook.com","hotmail.com","live.com","icloud.com","me.com","aol.com","mail.com","gmx.com","gmx.net","proton.me","protonmail.com","zoho.com","yandex.com","yandex.ru"]);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter a valid company email address.";
+    if (blocked.has(domain)) return "Personal email providers are not accepted. Use your company email.";
+    return "";
+  }
+
+  function passwordErrors(password, confirmation = password) {
+    const value = String(password || "");
+    const errors = [];
+    if (value.length < 8) errors.push("Use at least 8 characters.");
+    if (!/[A-Z]/.test(value)) errors.push("Include at least one capital letter.");
+    if (!/[^A-Za-z0-9]/.test(value)) errors.push("Include at least one special character.");
+    if (/(.)\1\1/i.test(value)) errors.push("Do not repeat the same character 3 times in a row.");
+    if (value !== String(confirmation || "")) errors.push("Both password fields must match.");
+    return errors;
+  }
+
+  async function registerPartner(values) {
+    const emailError = corporateEmailError(values.email);
+    if (emailError) throw new Error(emailError);
+    const errors = passwordErrors(values.password, values.passwordConfirmation);
+    if (errors.length) throw new Error(errors[0]);
+    const emailRedirectTo = new URL("./login.html?verified=1", window.location.href).href;
+    const { data, error } = await client.auth.signUp({
+      email: String(values.email).trim().toLowerCase(),
+      password: values.password,
+      options: {
+        emailRedirectTo,
+        data: {
+          registration_type: "partner",
+          company_name: String(values.companyName).trim(),
+          contact_name: String(values.contactName).trim(),
+          position_title: String(values.positionTitle).trim(),
+          phone: String(values.phone || "").trim(),
+          requested_partner_id: values.partnerId,
+        },
+      },
+    });
+    if (error) throw error;
+    if (data.session) await client.auth.signOut();
+    return data;
+  }
+
+  async function requestPasswordReset(email) {
+    const emailError = corporateEmailError(email);
+    if (emailError) throw new Error(emailError);
+    const redirectTo = new URL("./reset-password.html", window.location.href).href;
+    const { error } = await client.auth.resetPasswordForEmail(String(email).trim().toLowerCase(), { redirectTo });
+    if (error) throw error;
+  }
+
+  async function updatePassword(password, confirmation) {
+    const errors = passwordErrors(password, confirmation);
+    if (errors.length) throw new Error(errors[0]);
+    const { error } = await client.auth.updateUser({ password });
+    if (error) throw error;
+  }
+
   async function loadPartnerDesk(partnerId) {
     const results = await Promise.all([
       client.from("partner_desks").select("*").eq("id", partnerId).maybeSingle(),
@@ -43,5 +114,5 @@
     if (auditError) console.warn("Partner quote saved, but the audit event was not recorded.", auditError);
   }
 
-  window.LBPPartnerDeskSupabase = { client, sessionProfile, listPartnerDesks, loadPartnerDesk, saveQuote, text };
+  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, requestPasswordReset, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, text };
 })();
