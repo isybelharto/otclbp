@@ -89,7 +89,7 @@
   border-radius: 9px;
   background: #fff;
   color: #0f172a;
-  font: 700 24px "IBM Plex Mono", "Inter", monospace;
+  font: 700 24px "IBM Plex Mono", "Manrope", monospace;
   letter-spacing: .45em;
   text-align: center;
 }
@@ -116,7 +116,7 @@
   background: transparent;
   color: var(--blue);
   padding: 10px 0;
-  font: 700 11px Inter, sans-serif;
+  font: 700 11px Manrope, sans-serif;
   cursor: pointer;
 }
 

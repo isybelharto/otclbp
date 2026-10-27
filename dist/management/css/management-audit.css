@@ -8,7 +8,7 @@
 .audit-log{margin-top:24px;padding:0;overflow:hidden;border-color:#dbe5f1}
 .audit-filters{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:17px 16px;border-bottom:1px solid var(--line)}
 .audit-filters label{display:grid;gap:7px;color:#526987;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
-.audit-filters select,.audit-filters input{height:45px;width:100%;border:1px solid #d7e0ec;border-radius:7px;background:#fff;padding:8px 10px;font:600 12px Inter;text-transform:none;letter-spacing:0}
+.audit-filters select,.audit-filters input{height:45px;width:100%;border:1px solid #d7e0ec;border-radius:7px;background:#fff;padding:8px 10px;font:600 12px Manrope;text-transform:none;letter-spacing:0}
 .audit-log-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(--line)}
 .audit-log-head h2{margin:0;color:#0f172a;font-size:15px}
 .audit-log-head span{display:inline-flex;align-items:center;gap:7px;color:#64748b;font-size:12px}

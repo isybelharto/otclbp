@@ -29,8 +29,9 @@ The application surface uses near-white and white (`#F8FAFC` / `#FFFFFF`) with s
 
 ## Typography and numbers
 
-- **Inter** is the single typeface for labels, controls, headings, financial values, identifiers, and narrative text across every page.
-- Financial values, transaction IDs, wallet addresses, bank references, and blockchain hashes use Inter with `font-variant-numeric: tabular-nums` for aligned figures.
+- **Manrope** is the primary interface typeface for headings, labels, controls, navigation, and narrative text across the public site, Management, Partner Desk, and role-based modules. Use weights 400, 500, 600, 700, and 800.
+- **IBM Plex Mono** is reserved for financial values, transaction IDs, wallet addresses, bank references, blockchain hashes, and other machine-readable identifiers. Use weights 400, 500, and 600 together with `font-variant-numeric: tabular-nums`.
+- Localized pages retain system-script fallbacks for Chinese, Japanese, Korean, and Devanagari glyph coverage when Manrope does not contain the required character.
 - Financial tables use tabular figures and compact spacing to support comparison.
 - Labels use uppercase, small-size, tracked lettering. Values remain larger, darker, and visually dominant.
 
@@ -56,7 +57,7 @@ The left navigation uses deep navy. Its default width is 256px; users can collap
 
 ### Partner Desk and access pages
 
-- Partner Desk uses the same Inter typography, blue/emerald/slate palette, approved LBP logo, borders, radii, and status colors as Management.
+- Partner Desk uses the same Manrope and IBM Plex Mono typography, blue/emerald/slate palette, approved LBP logo, borders, radii, and status colors as Management.
 - Login, registration, forgot-password, and reset-password pages use a near-white page surface and one white bordered card. Avoid decorative gradients and heavy shadows.
 - Form controls use 44px minimum height, visible labels, slate borders, 7px radius, and a blue focus ring.
 - The primary submit action is financial blue. Links and secondary actions remain blue text or white bordered controls.
