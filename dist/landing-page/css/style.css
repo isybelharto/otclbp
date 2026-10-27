@@ -47,6 +47,23 @@ html:lang(hi) .serif,html:lang(zh-CN) .serif,html:lang(ja) .serif,html:lang(ko) 
 .nav-partner-cta .icon{width:16px;height:16px}
 @media(max-width:1100px){.navigation .nav-partner-cta{margin-left:0}}
 @media(max-width:700px){.navigation .nav-partner-cta,.navigation .nav-cta{width:100%;margin-left:0}}
+
+/* Institutional liquidity partner invitation. */
+.partner-invitation{padding-top:0}
+.partner-invitation-panel{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:70px;align-items:center;padding:56px 60px;border:1px solid #476c6c;background:linear-gradient(135deg,var(--navy-deep),var(--navy));color:var(--white);border-radius:14px;box-shadow:0 24px 60px #0c23301c}
+.partner-invitation-panel:after{content:"";position:absolute;right:-130px;top:-180px;width:440px;height:440px;border:1px solid #abebce24;border-radius:50%;pointer-events:none}
+.partner-invitation-copy{position:relative;z-index:1}
+.partner-invitation .eyebrow{margin-bottom:18px;color:var(--mint)}
+.partner-invitation h2{max-width:14ch;font-size:clamp(34px,3.5vw,52px);letter-spacing:-.05em}
+.partner-invitation-copy>p:not(.partner-registration-note){max-width:62ch;margin-top:22px;color:#c8d8d7;font-size:13px;line-height:1.85}
+.partner-register-button{margin-top:28px}
+.partner-registration-note{max-width:66ch;margin-top:16px;color:#9fb8b6;font-family:var(--mono);font-size:9px;line-height:1.7}
+.partner-capabilities{position:relative;z-index:1;display:grid;gap:12px}
+.partner-capability{display:flex;align-items:center;gap:16px;min-height:68px;padding:16px 18px;border:1px solid #88afa54d;background:#ffffff0b;border-radius:8px}
+.partner-capability span{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--mint);color:var(--navy);font-weight:700}
+.partner-capability strong{font-size:12px;line-height:1.55;font-weight:600;color:#edf5f1}
+@media(max-width:900px){.partner-invitation-panel{grid-template-columns:1fr;gap:34px;padding:44px 38px}.partner-capabilities{grid-template-columns:repeat(3,minmax(0,1fr))}.partner-capability{align-items:flex-start;flex-direction:column;min-height:132px}}
+@media(max-width:700px){.partner-invitation{padding-bottom:72px}.partner-invitation-panel{width:calc(100% - 32px);padding:34px 24px}.partner-invitation h2{font-size:36px}.partner-capabilities{grid-template-columns:1fr}.partner-capability{align-items:center;flex-direction:row;min-height:64px}.partner-register-button{width:100%}}
 /* Keep all three header controls on one row, including the browser scrollbar. */
 .hero-minimum strong{white-space:nowrap}.hero-minimum>div{flex-shrink:0}.hero-minimum p{min-width:0;overflow-wrap:break-word}
 @media(max-width:700px){.brand img{width:162px}}
