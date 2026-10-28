@@ -114,7 +114,7 @@ begin
  v_tier:=coalesce(new.raw_user_meta_data->>'tier','Corporate');
  v_domain:=lower(split_part(new.email,'@',2));
  if v_company is null or v_contact is null then raise exception 'Company and representative names are required'; end if;
- if v_tier not in ('Corporate','Institutional Fund','Payment Gateway') then raise exception 'Invalid corporate client tier'; end if;
+ if v_tier not in ('Corporate','Institutional Fund','Financial Institution') then raise exception 'Invalid corporate client tier'; end if;
  if coalesce(v_domain,'')='' or v_domain in ('gmail.com','googlemail.com','yahoo.com','yahoo.co.id','outlook.com','hotmail.com','live.com','icloud.com','me.com','aol.com','mail.com','gmx.com','proton.me','protonmail.com') then raise exception 'Use an authorised company email'; end if;
  insert into public.corporate_clients(client_code,legal_name,tier,country_code,kyc_status,aml_status,client_status)
  values('CC-'||replace(new.id::text,'-',''),v_company,v_tier,'ID','pending','review','review') returning id into v_client;
