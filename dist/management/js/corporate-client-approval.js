@@ -35,10 +35,18 @@
     return `<section class="card client-directory corporate-directory"><header><div><h2>Approved Corporate Clients</h2><p>Only applicants approved through KYB are operational counterparties.</p></div><a class="button ghost" href="../corporate-client/register.html" target="_blank" rel="noopener">Corporate Registration</a></header><div class="table-wrap"><table class="client-table"><thead><tr><th>Client ID</th><th>Client</th><th>Tier</th><th>KYC / AML</th><th>Status</th><th>Onboarded</th></tr></thead><tbody>${active.length ? active.map((client) => `<tr><td class="client-id">${safe(client.clientCode)}</td><td><span class="client-name"><i class="fi fi-rr-building" aria-hidden="true"></i>${safe(client.company)}</span></td><td class="client-tier">${safe(client.tier)}</td><td>${badge(client.kycStatus)} ${badge(client.amlStatus)}</td><td>${badge(client.clientStatus)}</td><td>${safe(date(client.onboardedAt))}</td></tr>`).join("") : `<tr><td colspan="6" class="empty">No approved Corporate Clients yet.</td></tr>`}</tbody></table></div></section>`;
   }
 
-  function draw(activeTab = "queue", error = "") {
+  function financeMarkup() {
+    const active = requests.filter((request) => request.clientStatus === "active");
+    const approved = requests.filter((request) => request.kybStatus === "approved");
+    const pending = requests.filter((request) => !["approved", "rejected"].includes(request.kybStatus));
+    const documentsUploaded = requests.reduce((total, request) => total + Number(request.documentsUploaded || 0), 0);
+    return `<div class="kpis corporate-finance-kpis"><div class="kpi"><label>Active Corporate Clients</label><strong>${active.length}</strong><span>Approved for OTC execution</span></div><div class="kpi"><label>KYB Approved</label><strong>${approved.length} / ${requests.length}</strong><span>Completed onboarding reviews</span></div><div class="kpi"><label>Pending Review</label><strong>${pending.length}</strong><span>Requires Management action</span></div><div class="kpi"><label>KYB Documents Received</label><strong>${documentsUploaded}</strong><span>Across all registrations</span></div></div><section class="card client-directory corporate-directory corporate-finance-directory"><header><div><h2>Corporate Finance Dashboard</h2><p>Operational counterparties approved through Corporate Client registration and KYB review.</p></div><a class="button ghost" href="../corporate-client/register.html" target="_blank" rel="noopener">Open Corporate Registration</a></header><div class="table-wrap"><table class="client-table"><thead><tr><th>Client ID</th><th>Corporate Client</th><th>Tier</th><th>KYC / AML</th><th>Trading Status</th><th>Onboarded</th></tr></thead><tbody>${active.length ? active.map((client) => `<tr><td class="client-id">${safe(client.clientCode)}</td><td><span class="client-name"><i class="fi fi-rr-building" aria-hidden="true"></i>${safe(client.company)}</span></td><td class="client-tier">${safe(client.tier)}</td><td>${badge(client.kycStatus)} ${badge(client.amlStatus)}</td><td>${badge(client.clientStatus)}</td><td>${safe(date(client.onboardedAt))}</td></tr>`).join("") : `<tr><td colspan="6" class="empty">No active Corporate Clients yet. Approved registrations will appear here automatically.</td></tr>`}</tbody></table></div></section>`;
+  }
+
+  function draw(activeTab = "finance", error = "") {
     const host = document.querySelector("#view");
     if (!host) return;
-    host.innerHTML = `<section class="page-title"><div><p class="eyebrow">Management</p><h1>B2B / Corporate Clients</h1><p>Corporate Clients join through registration and require KYB approval before OTC access is enabled.</p></div></section><div class="partner-dashboard-tabs corporate-dashboard-tabs" role="tablist" aria-label="Corporate Client sections"><button class="partner-dashboard-tab ${activeTab === "queue" ? "active" : ""}" type="button" data-corporate-tab="queue">Registration Queue <span class="tab-count">${requests.filter((request) => !["approved", "rejected"].includes(request.kybStatus)).length}</span></button><button class="partner-dashboard-tab ${activeTab === "directory" ? "active" : ""}" type="button" data-corporate-tab="directory">Approved Clients</button></div><div id="corporate-client-panel">${activeTab === "queue" ? queueMarkup(error) : directoryMarkup()}</div>`;
+    host.innerHTML = `<section class="page-title"><div><p class="eyebrow">Management</p><h1>B2B / Corporate Clients</h1><p>Corporate Clients join through registration and require KYB approval before OTC access is enabled.</p></div></section><div class="partner-dashboard-tabs corporate-dashboard-tabs" role="tablist" aria-label="Corporate Client sections"><button class="partner-dashboard-tab ${activeTab === "finance" ? "active" : ""}" type="button" data-corporate-tab="finance">Finance Dashboard</button><button class="partner-dashboard-tab ${activeTab === "queue" ? "active" : ""}" type="button" data-corporate-tab="queue">Registration Queue <span class="tab-count">${requests.filter((request) => !["approved", "rejected"].includes(request.kybStatus)).length}</span></button><button class="partner-dashboard-tab ${activeTab === "directory" ? "active" : ""}" type="button" data-corporate-tab="directory">Approved Clients</button></div><div id="corporate-client-panel">${activeTab === "finance" ? financeMarkup() : activeTab === "queue" ? queueMarkup(error) : directoryMarkup()}</div>`;
     host.querySelectorAll("[data-corporate-tab]").forEach((button) => button.addEventListener("click", () => draw(button.dataset.corporateTab)));
     const refresh = host.querySelector("#refresh-corporate-requests");
     if (refresh) refresh.addEventListener("click", () => loadAndDraw("queue"));
@@ -68,7 +76,7 @@
     });
   }
 
-  async function loadAndDraw(tab = "queue") {
+  async function loadAndDraw(tab = "finance") {
     draw(tab);
     try {
       await loadRequests();
@@ -93,5 +101,5 @@
     await loadAndDraw("queue");
   }
 
-  document.querySelectorAll(".nav[data-view='clients']").forEach((nav) => nav.addEventListener("click", () => loadAndDraw("queue")));
+  document.querySelectorAll(".nav[data-view='clients']").forEach((nav) => nav.addEventListener("click", () => loadAndDraw("finance")));
 })();
