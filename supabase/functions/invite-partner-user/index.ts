@@ -8,16 +8,19 @@ const allowedOrigins = new Set([
   "http://127.0.0.1:4181",
 ]);
 
-const json = (body: unknown, status = 200, origin = "") => new Response(JSON.stringify(body), {
-  status,
-  headers: {
+const json = (body: unknown, status = 200, origin = "") => {
+  const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : "https://management.ptlbp.co.id",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
-  },
-});
+  };
+  // A 204 preflight response must not include a body. Returning one causes the
+  // browser to reject CORS before it can send the authenticated POST request.
+  if (status === 204) return new Response(null, { status, headers });
+  return new Response(JSON.stringify(body), { status, headers });
+};
 
 const clean = (value: unknown, max = 160) => String(value ?? "").trim().slice(0, max);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

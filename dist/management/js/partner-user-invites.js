@@ -45,7 +45,15 @@
       status.className = "partner-invite-status";
       try {
         const { data, error } = await window.LBPSupabase.functions.invoke("invite-partner-user", { body: values });
-        if (error) throw error;
+        if (error) {
+          let detail = "";
+          try {
+            const response = error.context;
+            const body = response && typeof response.json === "function" ? await response.json() : null;
+            detail = body?.error || "";
+          } catch (_) {}
+          throw new Error(detail || error.message);
+        }
         if (!data?.success) throw new Error(data?.error || "The invitation could not be sent.");
         status.textContent = `Invitation sent to ${data.email}. The account is approved for ${data.partnerName}.`;
         status.className = "partner-invite-status success";
