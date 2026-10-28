@@ -109,11 +109,15 @@
     if (error) throw error;
   }
 
-  async function requestPasswordReset(email) {
+  async function requestPasswordReset(email, captchaToken) {
     const emailError = corporateEmailError(email);
     if (emailError) throw new Error(emailError);
+    if (!captchaToken) throw new Error("Complete the security verification before requesting a password reset.");
     const redirectTo = authRedirect("recovery.html");
-    const { error } = await client.auth.resetPasswordForEmail(String(email).trim().toLowerCase(), { redirectTo });
+    const { error } = await client.auth.resetPasswordForEmail(String(email).trim().toLowerCase(), {
+      redirectTo,
+      captchaToken,
+    });
     if (error) throw error;
   }
 

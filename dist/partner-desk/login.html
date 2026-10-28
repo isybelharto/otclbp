@@ -4,8 +4,8 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>LBP OTC Partner Desk Access</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/partner-desk.css?v=20261027-manrope">
-  <link rel="stylesheet" href="css/partner-brand.css?v=20261027-manrope">
+  <link rel="stylesheet" href="css/partner-desk.css?v=20261027-manrope"><link rel="stylesheet" href="css/partner-brand.css?v=20261027-manrope">
+  <style>#partner-turnstile{height:1px;overflow:hidden}.partner-config-save:disabled{cursor:wait;opacity:.72}</style>
 </head>
 <body class="partner-auth-body">
   <main class="partner-auth-shell">
@@ -15,6 +15,7 @@
       <form id="partner-login-form" class="partner-auth-form">
         <label>Company Email<input id="partner-email" type="email" required autocomplete="username" placeholder="name@company.com"></label>
         <label>Password<input id="partner-password" type="password" required autocomplete="current-password" placeholder="Enter password"></label>
+        <div id="partner-turnstile" aria-hidden="true"></div>
         <button class="partner-config-save" type="submit">Sign in to Partner Desk</button>
         <p id="partner-login-status" class="partner-auth-status" role="status"></p>
       </form>
@@ -24,26 +25,20 @@
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/partner-desk-supabase.js?v=20261027-partner-access-refresh"></script>
+  <script src="../shared/turnstile-config.js?v=20261028-partner-auth"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  <script src="js/partner-desk-supabase.js?v=20261028-partner-auth"></script>
   <script>
-    const status=document.querySelector('#partner-login-status'),query=new URLSearchParams(location.search);
+    const status=document.querySelector('#partner-login-status'),form=document.querySelector('#partner-login-form'),button=form.querySelector('button'),query=new URLSearchParams(location.search);
+    let widgetId=null,captchaToken=null;
+    function renderTurnstile(){const siteKey=window.LBPTurnstile?.siteKey;if(!siteKey||!window.turnstile||widgetId!==null)return;widgetId=window.turnstile.render('#partner-turnstile',{sitekey:siteKey,size:'invisible',callback:token=>{captchaToken=token},'expired-callback':()=>{captchaToken=null},'error-callback':()=>{captchaToken=null;status.textContent='Security verification could not be completed. Refresh and try again.';status.className='partner-auth-status error'}})}
+    window.addEventListener('load',()=>{const timer=setInterval(()=>{renderTurnstile();if(widgetId!==null||!window.LBPTurnstile?.siteKey)clearInterval(timer)},100)});
+    function getCaptchaToken(){return new Promise((resolve,reject)=>{if(!window.LBPTurnstile?.siteKey)return reject(new Error('Security verification is not configured. Please contact LBP Management.'));if(!window.turnstile||widgetId===null)return reject(new Error('Security verification is still loading. Please try again in a moment.'));captchaToken=null;window.turnstile.execute(widgetId);const started=Date.now(),timer=setInterval(()=>{if(captchaToken){clearInterval(timer);resolve(captchaToken)}else if(Date.now()-started>10000){clearInterval(timer);reject(new Error('Security verification timed out. Please try again.'))}},80)})}
     async function finishEmailConfirmation(){if(!location.hash.includes('access_token='))return;await window.LBPPartnerDeskSupabase.client.auth.getSession();if(history.replaceState)history.replaceState({},document.title,location.pathname+'?verified=1');await window.LBPPartnerDeskSupabase.client.auth.signOut({scope:'local'});status.textContent='Email verified. Your request remains subject to Management approval.';status.className='partner-auth-status success'}
     if(query.get('verified')){status.textContent='Email verified. Your request remains subject to Management approval.';status.className='partner-auth-status success'}
     finishEmailConfirmation().catch(()=>{status.textContent='Email confirmation completed. Please sign in after Management approval.';status.className='partner-auth-status success'});
     document.querySelector('#forgot-user-id').onclick=()=>{const panel=document.querySelector('#partner-userid-help');panel.hidden=!panel.hidden};
-    document.querySelector('#partner-login-form').addEventListener('submit',async event=>{
-      event.preventDefault();status.textContent='Checking access…';status.className='partner-auth-status';
-      const email=document.querySelector('#partner-email').value.trim(),password=document.querySelector('#partner-password').value;
-      const {data,error}=await window.LBPPartnerDeskSupabase.client.auth.signInWithPassword({email,password});
-      if(error){status.textContent='The email or password is incorrect.';status.className='partner-auth-status error';return}
-      const access=await window.LBPPartnerDeskSupabase.sessionProfile();if(access){location.replace('./');return}
-      let request=null;try{request=await window.LBPPartnerDeskSupabase.accessRequestStatus(data.user.id)}catch(requestError){console.warn(requestError)}
-      await window.LBPPartnerDeskSupabase.client.auth.signOut();
-      if(request?.status==='pending')status.textContent='Your email is verified, but Management approval is still pending.';
-      else if(request?.status==='rejected')status.textContent=request.review_note||'This access request was not approved. Contact LBP Management.';
-      else status.textContent='This account has no active Partner Desk access.';
-      status.className='partner-auth-status error';
-    });
+    form.addEventListener('submit',async event=>{event.preventDefault();button.disabled=true;status.textContent='Checking access…';status.className='partner-auth-status';try{const email=document.querySelector('#partner-email').value.trim(),password=document.querySelector('#partner-password').value,token=await getCaptchaToken();const{data,error}=await window.LBPPartnerDeskSupabase.client.auth.signInWithPassword({email,password,options:{captchaToken:token}});if(error)throw error;const access=await window.LBPPartnerDeskSupabase.sessionProfile();if(access){location.replace('./');return}let request=null;try{request=await window.LBPPartnerDeskSupabase.accessRequestStatus(data.user.id)}catch(requestError){console.warn(requestError)}await window.LBPPartnerDeskSupabase.client.auth.signOut();if(request?.status==='pending')status.textContent='Your email is verified, but Management approval is still pending.';else if(request?.status==='rejected')status.textContent=request.review_note||'This access request was not approved. Contact LBP Management.';else status.textContent='This account has no active Partner Desk access.';status.className='partner-auth-status error'}catch(error){status.textContent=error.message||'The email or password is incorrect.';status.className='partner-auth-status error'}finally{if(widgetId!==null&&window.turnstile)window.turnstile.reset(widgetId);captchaToken=null;button.disabled=false}});
   </script>
 </body>
 </html>
