@@ -27,9 +27,10 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 Deno.serve(async (request) => {
   const origin = request.headers.get("Origin") || "";
-  if (request.method === "OPTIONS") return json({}, 204, origin);
-  if (request.method !== "POST") return json({ error: "Method not allowed" }, 405, origin);
-  if (origin && !allowedOrigins.has(origin)) return json({ error: "Untrusted origin" }, 403, origin);
+  try {
+    if (request.method === "OPTIONS") return json({}, 204, origin);
+    if (request.method !== "POST") return json({ error: "Method not allowed" }, 405, origin);
+    if (origin && !allowedOrigins.has(origin)) return json({ error: "Untrusted origin" }, 403, origin);
 
   const url = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
@@ -108,5 +109,10 @@ Deno.serve(async (request) => {
     new_value: { email, partner_id: partnerId, partner_name: desk.display_name },
   });
 
-  return json({ success: true, email, partnerId, partnerName: desk.display_name }, 200, origin);
+    return json({ success: true, email, partnerId, partnerName: desk.display_name }, 200, origin);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected invitation service error";
+    console.error("invite-partner-user failed", error);
+    return json({ error: message }, 500, origin);
+  }
 });

@@ -3,6 +3,27 @@
 
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const functionUrl = "https://biwwfxfpcsanszxrxhyw.supabase.co/functions/v1/invite-partner-user";
+  const publishableKey = "sb_publishable_sB3GSSdJi477vhQAmjABnw_DT4sknEb";
+
+  async function sendInvitation(values) {
+    const { data: { session }, error: sessionError } = await window.LBPSupabase.auth.getSession();
+    if (sessionError || !session?.access_token) throw new Error("Your Management session has expired. Please sign in again.");
+    const response = await fetch(functionUrl, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: publishableKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+    const contentType = response.headers.get("content-type") || "";
+    const body = contentType.includes("application/json") ? await response.json() : {};
+    if (!response.ok) throw new Error(body?.error || `Invitation service returned HTTP ${response.status}.`);
+    return body;
+  }
 
   function openInviteDialog() {
     const modal = document.querySelector("#modal");
@@ -44,16 +65,7 @@
       status.textContent = "Creating the user and sending the invitation…";
       status.className = "partner-invite-status";
       try {
-        const { data, error } = await window.LBPSupabase.functions.invoke("invite-partner-user", { body: values });
-        if (error) {
-          let detail = "";
-          try {
-            const response = error.context;
-            const body = response && typeof response.json === "function" ? await response.json() : null;
-            detail = body?.error || "";
-          } catch (_) {}
-          throw new Error(detail || error.message);
-        }
+        const data = await sendInvitation(values);
         if (!data?.success) throw new Error(data?.error || "The invitation could not be sent.");
         status.textContent = `Invitation sent to ${data.email}. The account is approved for ${data.partnerName}.`;
         status.className = "partner-invite-status success";
