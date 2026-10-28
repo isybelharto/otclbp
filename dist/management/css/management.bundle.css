@@ -189,3 +189,6 @@ body,button,input,select,textarea{font-family:"Manrope",ui-sans-serif,system-ui,
 .partner-dashboard-tab.active .tab-count{background:rgba(255,255,255,.2);color:#fff}
 .partner-dashboard-panel .partner-desk-table-card{margin-top:0}.partner-dashboard-panel .access-request-card{margin-top:24px}
 @media(max-width:700px){.partner-dashboard-tabs{align-items:stretch;flex-direction:column}.partner-dashboard-tab{width:100%}.partner-dashboard-panel .access-request-card{margin-top:18px}}
+
+/* AUM live-rate controls: reserve sufficient space for decimal FX and BTC values. */
+.aum-reserve-card .table-wrap{overflow-x:auto}.aum-table{min-width:900px}.aum-rate-input{width:166px;min-width:166px;font-variant-numeric:tabular-nums}@media(max-width:700px){.aum-rate-input{width:166px;min-width:166px}}
