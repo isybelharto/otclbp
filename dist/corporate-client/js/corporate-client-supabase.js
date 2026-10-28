@@ -51,10 +51,14 @@
     if (data.session) await client.auth.signOut();
     return data;
   }
-  async function reset(email) {
+  async function reset(email, captchaToken) {
     const emailError = companyEmail(email);
     if (emailError) throw new Error(emailError);
-    const { error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: new URL('recovery.html', base).href });
+    if (!captchaToken) throw new Error('Complete the security verification before requesting a password reset.');
+    const { error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: new URL('recovery.html', base).href,
+      captchaToken,
+    });
     if (error) throw error;
   }
   window.LBPCorporate = { client, companyEmail, passwordErrors, profile, register, verify, reset };
