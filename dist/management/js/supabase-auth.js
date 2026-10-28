@@ -74,8 +74,12 @@
     }
   }
 
-  async function signIn(email, password) {
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
+  async function signIn(email, password, captchaToken) {
+    const { data, error } = await client.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken },
+    });
     if (error) throw error;
     return data;
   }

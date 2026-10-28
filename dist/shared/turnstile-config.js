@@ -4,5 +4,5 @@
  * Store the Secret Key only in Supabase Auth > Bot and Abuse Protection.
  */
 window.LBPTurnstile = window.LBPTurnstile || {
-  siteKey: ''
+  siteKey: '0x4AAAAAAFpWSWViR0Yd46Zl'
 };

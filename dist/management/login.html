@@ -23,6 +23,8 @@
     input:focus { border-color: #1e40af; box-shadow: 0 0 0 3px #dbeafe; }
     button { border: 0; border-radius: 8px; padding: 13px; background: #1e40af; color: #fff; cursor: pointer; font: inherit; font-weight: 800; }
     button:hover { background: #17348d; }
+    button:disabled { cursor: wait; opacity: .72; }
+    #turnstile { height: 1px; overflow: hidden; }
     #message { min-height: 20px; margin: 0; color: #b91c1c; font-size: 13px; }
     footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.5; }
   </style>
@@ -36,12 +38,15 @@
     <form id="login-form">
       <label>Email<input id="email" type="email" autocomplete="email" required></label>
       <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+      <div id="turnstile" aria-hidden="true"></div>
       <p id="message" role="alert"></p>
       <button type="submit">Sign In</button>
     </form>
     <footer>Access is limited to active Management / Super Admin profiles.</footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../shared/turnstile-config.js?v=20261028-management-auth"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script src="js/supabase-config.js?v=20261027-partner-access-refresh"></script>
   <script src="js/supabase-auth.js?v=20261027-partner-access-refresh"></script>
   <script>
@@ -50,6 +55,56 @@
     const params = new URLSearchParams(window.location.search);
     if (params.get("error") === "unauthorized") message.textContent = "Your account is not authorised for Management access.";
     if (params.get("error") === "authorization") message.textContent = "We could not verify your Management access.";
+
+    let widgetId = null;
+    let captchaToken = null;
+
+    function renderTurnstile() {
+      const siteKey = window.LBPTurnstile?.siteKey;
+      if (!siteKey || !window.turnstile || widgetId !== null) return;
+      widgetId = window.turnstile.render("#turnstile", {
+        sitekey: siteKey,
+        size: "invisible",
+        callback: (token) => { captchaToken = token; },
+        "expired-callback": () => { captchaToken = null; },
+        "error-callback": () => {
+          captchaToken = null;
+          message.textContent = "Security verification could not be completed. Please refresh and try again.";
+        },
+      });
+    }
+
+    window.addEventListener("load", () => {
+      const waitForTurnstile = window.setInterval(() => {
+        renderTurnstile();
+        if (widgetId !== null || !window.LBPTurnstile?.siteKey) window.clearInterval(waitForTurnstile);
+      }, 100);
+    });
+
+    function requestCaptchaToken() {
+      return new Promise((resolve, reject) => {
+        if (!window.LBPTurnstile?.siteKey) {
+          reject(new Error("Security verification is not configured. Please contact the system administrator."));
+          return;
+        }
+        if (!window.turnstile || widgetId === null) {
+          reject(new Error("Security verification is still loading. Please try again in a moment."));
+          return;
+        }
+        captchaToken = null;
+        window.turnstile.execute(widgetId);
+        const startedAt = Date.now();
+        const poll = window.setInterval(() => {
+          if (captchaToken) {
+            window.clearInterval(poll);
+            resolve(captchaToken);
+          } else if (Date.now() - startedAt > 10000) {
+            window.clearInterval(poll);
+            reject(new Error("Security verification timed out. Please try again."));
+          }
+        }, 80);
+      });
+    }
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -60,7 +115,8 @@
       try {
         const email = document.querySelector("#email").value.trim();
         const password = document.querySelector("#password").value;
-        const result = await window.LBPManagementAuth.signIn(email, password);
+        const token = await requestCaptchaToken();
+        const result = await window.LBPManagementAuth.signIn(email, password, token);
         const profile = await window.LBPManagementAuth.getManagementProfile(result.user.id);
         if (!profile || profile.role !== "management" || !profile.is_active) {
           await window.LBPManagementAuth.signOut();
@@ -70,6 +126,8 @@
       } catch (error) {
         message.textContent = error.message || "Sign-in failed. Please try again.";
       } finally {
+        if (widgetId !== null && window.turnstile) window.turnstile.reset(widgetId);
+        captchaToken = null;
         button.disabled = false;
         button.textContent = "Sign In";
       }
