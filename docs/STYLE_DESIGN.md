@@ -130,4 +130,8 @@ The Management header includes a `1 USD = Rp …` reference-rate component. It r
 
 ## Production boundaries
 
+### Corporate Client module
+
+The separate `dist/corporate-client/` module uses the same approved LBP logo, Manrope interface text, IBM Plex Mono financial values, blue/emerald palette, white cards and slate borders as Partner Desk. Desktop uses left navigation with onboarding and transaction tabs; mobile navigation opens from the top-left menu. Authentication and recovery screens share one institutional brand treatment. KYB uploads are grouped into nine document cards with required markers.
+
 This implementation is a front-end operating prototype. Production use requires authenticated identity, enforced role permissions, governed market data, real compliance controls, immutable audit evidence, and approved banking/custody integrations.

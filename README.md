@@ -152,4 +152,6 @@ An internet connection is required only for external resources such as Google Fo
 
 ## Production boundary
 
+The new Corporate Client module is under `dist/corporate-client/`. The onboarding tables, private KYB storage and registration bootstrap are active in Supabase. OTC request execution, Management review UI and end-to-end acceptance remain pending. See [Corporate Client setup and status](docs/CORPORATE_CLIENT_MODULE.md) before deployment.
+
 Before handling real funds or public users, replace all demo-only functionality with independently reviewed production services for identity, authorization, secure persistence, KYC/KYB/AML/KYT, sanctions screening, bank confirmation, wallet screening, reconciliation, audit retention, monitoring, incident response, and legal/regulatory controls.
