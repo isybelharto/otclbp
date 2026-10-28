@@ -141,12 +141,13 @@
     });
   }
 
-  async function updatePassword(password, confirmation) {
+  async function updatePassword(password, confirmation, nonce) {
     const errors = passwordErrors(password, confirmation);
     if (errors.length) throw new Error(errors[0]);
     const { data: { session }, error: sessionError } = await client.auth.getSession();
     if (sessionError || !session) throw new Error("The recovery session is missing or expired. Request a new password reset email.");
-    const { error } = await client.auth.updateUser({ password });
+    if (!/^\d{6}$/.test(String(nonce || "").trim())) throw new Error("Enter the six-digit reauthentication PIN before changing your password.");
+    const { error } = await client.auth.updateUser({ password, nonce: String(nonce).trim() });
     if (error) throw error;
     await client.auth.signOut();
   }
