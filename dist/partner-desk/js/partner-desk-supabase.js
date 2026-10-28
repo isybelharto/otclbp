@@ -59,11 +59,13 @@
     if (emailError) throw new Error(emailError);
     const errors = passwordErrors(values.password, values.passwordConfirmation);
     if (errors.length) throw new Error(errors[0]);
+    if (!values.captchaToken) throw new Error("Complete the security verification before registering.");
     const emailRedirectTo = authRedirect("login.html?verified=1");
     const { data, error } = await client.auth.signUp({
       email: String(values.email).trim().toLowerCase(),
       password: values.password,
       options: {
+        captchaToken: values.captchaToken,
         emailRedirectTo,
         data: {
           registration_type: "partner",
