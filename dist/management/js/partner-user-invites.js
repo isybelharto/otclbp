@@ -80,7 +80,9 @@
 
   function addButton() {
     const tabs = document.querySelector(".partner-dashboard-tabs");
-    if (!tabs || tabs.querySelector("#invite-partner-user")) return;
+    // The Corporate Client dashboard reuses the tab layout. Partner invitations
+    // belong only to the OTC Partner Desk module, never to B2B / Corporate Clients.
+    if (!tabs || tabs.classList.contains("corporate-dashboard-tabs") || tabs.querySelector("#invite-partner-user")) return;
     const button = document.createElement("button");
     button.id = "invite-partner-user";
     button.type = "button";

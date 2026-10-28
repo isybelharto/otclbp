@@ -78,16 +78,21 @@
   }
 
   function addButton() {
-    const host = document.querySelector(".corporate-finance-directory header, .corporate-request-card header");
-    if (!host || document.querySelector("#invite-corporate-client")) return;
-    const actions = host.querySelector(".access-header-actions") || host.querySelector("a.button")?.parentElement || host;
-    const button = document.createElement("button");
-    button.id = "invite-corporate-client";
-    button.type = "button";
-    button.className = "button";
-    button.innerHTML = '<i class="fi fi-rr-user-add" aria-hidden="true"></i> Invite Corporate Client';
-    button.onclick = openInviteDialog;
-    actions.insertBefore(button, actions.firstChild);
+    // Keep the primary invitation action in the Corporate Client tab bar,
+    // replacing the Partner Desk invitation position shown in the header.
+    const tabs = document.querySelector(".corporate-dashboard-tabs");
+    if (!tabs) return;
+    document.querySelector("#invite-partner-user")?.remove();
+    let button = document.querySelector("#invite-corporate-client");
+    if (!button) {
+      button = document.createElement("button");
+      button.id = "invite-corporate-client";
+      button.type = "button";
+      button.className = "partner-dashboard-invite";
+      button.innerHTML = '<i class="fi fi-rr-user-add" aria-hidden="true"></i> Invite Corporate Client';
+      button.onclick = openInviteDialog;
+    }
+    tabs.appendChild(button);
   }
 
   new MutationObserver(addButton).observe(document.documentElement, { childList: true, subtree: true });
