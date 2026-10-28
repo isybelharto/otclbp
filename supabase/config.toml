@@ -1,0 +1,10 @@
+project_id = "biwwfxfpcsanszxrxhyw"
+
+# The function validates the caller's bearer token and active Management role
+# within its handler. Disabling the gateway pre-check lets it return a precise
+# error response instead of Supabase's generic non-2xx response.
+[functions.invite-partner-user]
+verify_jwt = false
+
+[functions.invite-corporate-client]
+verify_jwt = false
