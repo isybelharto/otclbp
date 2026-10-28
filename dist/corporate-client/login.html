@@ -1,1 +1,100 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LBP Corporate Client Access</title><link rel="icon" href="assets/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/corporate-client.css"></head><body class="auth-body"><main class="auth-shell"><div class="brand"><img src="assets/lbp-crypto-fiat-logo.png"><div><strong>PT LINTAS BATAS PEMBAYARAN</strong><small>CORPORATE CLIENT PORTAL</small></div></div><section class="card auth-card"><header><span class="eyebrow">Secure institutional access</span><h1>Sign in to Corporate Client</h1><p class="muted">Use your registered User ID (company email) and password.</p></header><form id="form" class="form-grid"><label class="full"><span>User ID / Company Email</span><input id="email" type="email" autocomplete="username" required></label><label class="full"><span>Password</span><input id="password" type="password" autocomplete="current-password" required></label><button class="btn btn-primary full">Sign In</button><p id="status" class="status full"></p></form><footer><a href="forgot-password.html">Forgot password or User ID?</a> · New client? <a href="register.html">Register first</a></footer></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/corporate-client-supabase.js"></script><script>(()=>{const form=document.getElementById("form");const email=document.getElementById("email");const password=document.getElementById("password");const status=document.getElementById("status");form.onsubmit=async e=>{e.preventDefault();status.textContent='Checking access…';const{error}=await LBPCorporate.client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error){status.textContent='Incorrect User ID or password.';status.className='status error';return}if(await LBPCorporate.profile())location.replace('./');else{await LBPCorporate.client.auth.signOut();status.textContent='Corporate Client access is not active.';status.className='status error'}};})();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LBP Corporate Client Access</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/corporate-client.css?v=20261028-corporate-login">
+  <style>#corporate-turnstile{height:1px;overflow:hidden}</style>
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <div class="brand"><img src="assets/lbp-crypto-fiat-logo.png" alt="PT Lintas Batas Pembayaran"><div><strong>PT LINTAS BATAS PEMBAYARAN</strong><small>CORPORATE CLIENT PORTAL</small></div></div>
+    <section class="card auth-card">
+      <header><span class="eyebrow">Secure institutional access</span><h1>Sign in to Corporate Client</h1><p class="muted">Use your registered User ID (company email) and password.</p></header>
+      <form id="form" class="form-grid">
+        <label class="full"><span>User ID / Company Email</span><input id="email" type="email" autocomplete="username" required></label>
+        <label class="full"><span>Password</span><input id="password" type="password" autocomplete="current-password" required></label>
+        <div id="corporate-turnstile" aria-hidden="true"></div>
+        <button id="submit" class="btn btn-primary full" type="submit">Sign In</button>
+        <p id="status" class="status full" role="status" aria-live="polite"></p>
+      </form>
+      <footer><a href="forgot-password.html">Forgot password or User ID?</a> · New client? <a href="register.html">Register first</a></footer>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../shared/turnstile-config.js?v=20261028-corporate-login"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  <script src="js/corporate-client-supabase.js?v=20261028-corporate-login"></script>
+  <script>
+    (() => {
+      const form = document.getElementById('form');
+      const email = document.getElementById('email');
+      const password = document.getElementById('password');
+      const status = document.getElementById('status');
+      const submit = document.getElementById('submit');
+      let widgetId = null;
+      let captchaToken = null;
+      const renderTurnstile = () => {
+        const siteKey = window.LBPTurnstile?.siteKey;
+        if (!siteKey || !window.turnstile || widgetId !== null) return;
+        widgetId = window.turnstile.render('#corporate-turnstile', {
+          sitekey: siteKey,
+          size: 'invisible',
+          callback: token => { captchaToken = token; },
+          'expired-callback': () => { captchaToken = null; },
+          'error-callback': () => { captchaToken = null; status.textContent = 'Security verification could not be completed. Refresh and try again.'; status.className = 'status error'; },
+        });
+      };
+      window.addEventListener('load', () => {
+        const timer = window.setInterval(() => {
+          renderTurnstile();
+          if (widgetId !== null || !window.LBPTurnstile?.siteKey) window.clearInterval(timer);
+        }, 100);
+      });
+      const getCaptchaToken = () => new Promise((resolve, reject) => {
+        if (!window.LBPTurnstile?.siteKey) return reject(new Error('Security verification is not configured. Please contact LBP Management.'));
+        if (!window.turnstile || widgetId === null) return reject(new Error('Security verification is still loading. Please try again in a moment.'));
+        captchaToken = null;
+        window.turnstile.execute(widgetId);
+        const startedAt = Date.now();
+        const timer = window.setInterval(() => {
+          if (captchaToken) { window.clearInterval(timer); resolve(captchaToken); }
+          else if (Date.now() - startedAt > 10000) { window.clearInterval(timer); reject(new Error('Security verification timed out. Please try again.')); }
+        }, 80);
+      });
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        submit.disabled = true;
+        status.textContent = 'Checking access…';
+        status.className = 'status';
+        try {
+          const token = await getCaptchaToken();
+          const { error } = await LBPCorporate.client.auth.signInWithPassword({
+            email: email.value.trim(),
+            password: password.value,
+            options: { captchaToken: token },
+          });
+          if (error) throw error;
+          if (await LBPCorporate.profile()) {
+            location.replace('./');
+            return;
+          }
+          await LBPCorporate.client.auth.signOut();
+          throw new Error('Corporate Client access is not active.');
+        } catch (error) {
+          status.textContent = error.message || 'Incorrect User ID or password.';
+          status.className = 'status error';
+        } finally {
+          if (widgetId !== null && window.turnstile) window.turnstile.reset(widgetId);
+          captchaToken = null;
+          submit.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
