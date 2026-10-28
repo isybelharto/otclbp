@@ -139,7 +139,7 @@
   };
 
   async function loadClientNames() {
-    const { data, error } = await client.from("clients").select("*");
+    const { data, error } = await client.from("corporate_clients").select("*");
     if (error) throw error;
     return new Map((data || []).map((row) => [
       String(first(row, ["id", "client_id"])),
@@ -388,7 +388,7 @@
 
   async function loadOperationsData() {
     const [transactions, clientRows, fiatLegs, cryptoLegs, partnerRows, partnerDeskRows, partnerDeskQuotes, partnerDeskWallets, partnerDeskFiat, partnerDeskCrypto, partnerAccessRows, reconciliationRows, alertRows, auditRows, rateRows, bankAccounts, cryptoWallets] = await Promise.all([
-      optionalTable("transactions"), optionalTable("clients"), optionalTable("fiat_legs"), optionalTable("crypto_legs"),
+      optionalTable("transactions"), optionalTable("corporate_clients"), optionalTable("fiat_legs"), optionalTable("crypto_legs"),
       optionalTable("partner_quotes"), optionalTable("partner_desks"), optionalTable("partner_desk_quotes"), optionalTable("partner_desk_wallets"),
       optionalTable("partner_desk_fiat_settlements"), optionalTable("partner_desk_crypto_settlements"), optionalTable("partner_access_requests"), optionalTable("reconciliation_entries"), optionalTable("aml_alerts"),
       optionalTable("audit_events"), optionalTable("asset_rates"), optionalTable("bank_accounts"), optionalTable("crypto_wallets"),
