@@ -60,6 +60,8 @@
     const errors = passwordErrors(values.password, values.passwordConfirmation);
     if (errors.length) throw new Error(errors[0]);
     if (!values.captchaToken) throw new Error("Complete the security verification before registering.");
+    const registrationCode = String(values.registrationCode || "").replace(/\D/g, "");
+    if (!/^\d{6}$/.test(registrationCode)) throw new Error("Enter the six-digit Partner Desk invitation code provided by LBP.");
     const emailRedirectTo = authRedirect("login.html?verified=1");
     const { data, error } = await client.auth.signUp({
       email: String(values.email).trim().toLowerCase(),
@@ -73,7 +75,7 @@
           contact_name: String(values.contactName).trim(),
           position_title: String(values.positionTitle).trim(),
           phone: String(values.phone || "").trim(),
-          requested_partner_id: values.partnerId,
+          partner_registration_code: registrationCode,
         },
       },
     });
