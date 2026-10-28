@@ -1,1 +1,91 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Register · LBP Corporate Client</title><link rel="icon" href="assets/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/corporate-client.css"></head><body class="auth-body"><main class="auth-shell"><div class="brand"><img src="assets/lbp-crypto-fiat-logo.png"><div><strong>PT LINTAS BATAS PEMBAYARAN</strong><small>CORPORATE CLIENT REGISTRATION</small></div></div><section class="card auth-card"><header><span class="eyebrow">Company account registration</span><h1>Create Corporate Client access</h1><p class="muted">Your company email becomes your User ID. KYB approval is required before submitting OTC requests.</p></header><form id="form" class="form-grid"><label><span>Legal Company Name</span><input id="company" required></label><label><span>Client Type</span><select id="tier"><option>Corporate</option><option>Institutional Fund</option><option>Payment Gateway</option></select></label><label><span>Authorised Representative</span><input id="name" required></label><label><span>Phone</span><input id="phone" type="tel"></label><label><span>Company Email / User ID</span><input id="email" type="email" required></label><label><span>Password</span><input id="password" type="password" required></label><label><span>Confirm Password</span><input id="confirmation" type="password" required></label><div class="password-rules"><span data-rule="length">8+ characters</span><span data-rule="capital">Capital letter</span><span data-rule="special">Special character</span><span data-rule="repeat">No 3 repeats</span><span data-rule="match">Passwords match</span></div><button class="btn btn-primary full">Send 6-digit verification PIN</button><p id="status" class="status full"></p></form><form id="otpForm" class="form-grid" hidden><label class="full"><span>6-digit Email PIN</span><input id="otp" class="otp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></label><button class="btn btn-primary full">Verify Email</button><p id="otpStatus" class="status full"></p></form><footer>Already registered? <a href="login.html">Sign in</a></footer></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/corporate-client-supabase.js"></script><script>(()=>{const form=document.getElementById("form");const company=document.getElementById("company");const tier=document.getElementById("tier");const name=document.getElementById("name");const phone=document.getElementById("phone");const email=document.getElementById("email");const password=document.getElementById("password");const confirmation=document.getElementById("confirmation");const status=document.getElementById("status");const otpForm=document.getElementById("otpForm");const otp=document.getElementById("otp");const otpStatus=document.getElementById("otpStatus");const rules=()=>{const p=password.value;({length:p.length>=8,capital:/[A-Z]/.test(p),special:/[^A-Za-z0-9]/.test(p),repeat:!/(.)\1\1/i.test(p),match:p&&p===confirmation.value});let r={length:p.length>=8,capital:/[A-Z]/.test(p),special:/[^A-Za-z0-9]/.test(p),repeat:!/(.)\1\1/i.test(p),match:p&&p===confirmation.value};Object.entries(r).forEach(([k,v])=>document.querySelector(`[data-rule=${k}]`).classList.toggle('valid',v))};password.oninput=confirmation.oninput=rules;form.onsubmit=async e=>{e.preventDefault();try{await LBPCorporate.register({company:company.value,name:name.value,phone:phone.value,tier:tier.value,email:email.value,password:password.value,confirmation:confirmation.value});sessionStorage.setItem('lbp_corporate_email',email.value);form.hidden=true;otpForm.hidden=false;otp.focus()}catch(x){status.textContent=x.message;status.className='status error'}};otpForm.onsubmit=async e=>{e.preventDefault();try{await LBPCorporate.verify(sessionStorage.getItem('lbp_corporate_email'),otp.value);otpStatus.textContent='Email verified. Sign in to complete KYB onboarding.';otpStatus.className='status success';setTimeout(()=>location.href='login.html?verified=1',1200)}catch(x){otpStatus.textContent=x.message;otpStatus.className='status error'}};})();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Register · LBP Corporate Client</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/corporate-client.css">
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <div class="brand"><img src="assets/lbp-crypto-fiat-logo.png" alt="LBP"><div><strong>PT LINTAS BATAS PEMBAYARAN</strong><small>CORPORATE CLIENT REGISTRATION</small></div></div>
+    <section class="card auth-card">
+      <header><span class="eyebrow">Company account registration</span><h1>Create Corporate Client access</h1><p class="muted">Your company email becomes your User ID. KYB approval is required before submitting OTC requests.</p></header>
+      <form id="form" class="form-grid">
+        <label><span>Legal Company Name</span><input id="company" autocomplete="organization" required></label>
+        <label><span>Client Type</span><select id="tier"><option>Corporate</option><option>Institutional Fund</option><option>Payment Gateway</option></select></label>
+        <label><span>Authorised Representative</span><input id="name" autocomplete="name" required></label>
+        <label><span>Phone</span><input id="phone" type="tel" autocomplete="tel" required></label>
+        <label><span>Company Email / User ID</span><input id="email" type="email" autocomplete="email" required></label>
+        <label><span>Password</span><input id="password" type="password" autocomplete="new-password" required></label>
+        <label><span>Confirm Password</span><input id="confirmation" type="password" autocomplete="new-password" required></label>
+        <div class="password-rules full"><span data-rule="length">8+ characters</span><span data-rule="capital">Capital letter</span><span data-rule="special">Special character</span><span data-rule="repeat">No 3 repeats</span><span data-rule="match">Passwords match</span></div>
+        <section class="turnstile-box full" aria-labelledby="turnstile-label"><span id="turnstile-label" class="eyebrow">Security verification</span><div id="turnstile-widget"></div><p id="turnstile-status" class="turnstile-status">Loading anti-bot verification…</p></section>
+        <button id="submit" class="btn btn-primary full" type="submit" disabled>Send 6-digit verification PIN</button>
+        <p id="status" class="status full" role="status" aria-live="polite"></p>
+      </form>
+      <form id="otpForm" class="form-grid" hidden>
+        <label class="full"><span>6-digit Email PIN</span><input id="otp" class="otp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" required></label>
+        <button class="btn btn-primary full">Verify Email</button><p id="otpStatus" class="status full" role="status" aria-live="polite"></p>
+      </form>
+      <footer>Already registered? <a href="login.html">Sign in</a></footer>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/turnstile-config.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  <script src="js/corporate-client-supabase.js"></script>
+  <script>
+  (() => {
+    const form = document.getElementById('form');
+    const fields = Object.fromEntries(['company','tier','name','phone','email','password','confirmation'].map(id => [id, document.getElementById(id)]));
+    const submit = document.getElementById('submit');
+    const status = document.getElementById('status');
+    const captchaStatus = document.getElementById('turnstile-status');
+    const otpForm = document.getElementById('otpForm');
+    const otp = document.getElementById('otp');
+    const otpStatus = document.getElementById('otpStatus');
+    let captchaToken = '';
+    let widgetId;
+    const rules = () => {
+      const value = fields.password.value;
+      const ruleSet = { length:value.length >= 8, capital:/[A-Z]/.test(value), special:/[^A-Za-z0-9]/.test(value), repeat:!/(.)\1\1/i.test(value), match:value && value === fields.confirmation.value };
+      Object.entries(ruleSet).forEach(([key, valid]) => document.querySelector(`[data-rule=${key}]`).classList.toggle('valid', valid));
+    };
+    fields.password.oninput = fields.confirmation.oninput = rules;
+    const initTurnstile = () => {
+      const siteKey = window.LBPTurnstile?.siteKey;
+      if (!siteKey) { captchaStatus.textContent = 'Registration is temporarily unavailable while LBP completes security verification setup.'; captchaStatus.className = 'turnstile-status error'; return; }
+      if (!window.turnstile) return setTimeout(initTurnstile, 100);
+      widgetId = window.turnstile.render('#turnstile-widget', {
+        sitekey: siteKey, theme: 'light',
+        callback: token => { captchaToken = token; submit.disabled = false; captchaStatus.textContent = 'Security verification completed.'; captchaStatus.className = 'turnstile-status success'; },
+        'expired-callback': () => { captchaToken = ''; submit.disabled = true; captchaStatus.textContent = 'Security verification expired. Please complete it again.'; captchaStatus.className = 'turnstile-status error'; },
+        'error-callback': () => { captchaToken = ''; submit.disabled = true; captchaStatus.textContent = 'Security verification could not load. Refresh and try again.'; captchaStatus.className = 'turnstile-status error'; }
+      });
+      captchaStatus.textContent = 'Complete the verification to continue.';
+    };
+    initTurnstile();
+    form.onsubmit = async event => {
+      event.preventDefault(); status.textContent = ''; submit.disabled = true;
+      try {
+        await LBPCorporate.register({company:fields.company.value,name:fields.name.value,phone:fields.phone.value,tier:fields.tier.value,email:fields.email.value,password:fields.password.value,confirmation:fields.confirmation.value,captchaToken});
+        sessionStorage.setItem('lbp_corporate_email', fields.email.value); form.hidden = true; otpForm.hidden = false; otp.focus();
+      } catch (error) {
+        status.textContent = error.message; status.className = 'status error'; captchaToken = '';
+        if (window.turnstile && widgetId !== undefined) window.turnstile.reset(widgetId);
+        captchaStatus.textContent = 'Complete the security verification again.'; captchaStatus.className = 'turnstile-status';
+      } finally { if (!form.hidden) submit.disabled = !captchaToken; }
+    };
+    otpForm.onsubmit = async event => {
+      event.preventDefault();
+      try { await LBPCorporate.verify(sessionStorage.getItem('lbp_corporate_email'), otp.value); otpStatus.textContent = 'Email verified. Sign in to complete KYB onboarding.'; otpStatus.className = 'status success'; setTimeout(() => location.href = 'login.html?verified=1', 1200); }
+      catch (error) { otpStatus.textContent = error.message; otpStatus.className = 'status error'; }
+    };
+  })();
+  </script>
+</body>
+</html>

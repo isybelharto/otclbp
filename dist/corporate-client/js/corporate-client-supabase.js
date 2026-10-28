@@ -1,1 +1,61 @@
-(function(){'use strict';const url='https://biwwfxfpcsanszxrxhyw.supabase.co',key='sb_publishable_sB3GSSdJi477vhQAmjABnw_DT4sknEb',base='https://management.ptlbp.co.id/corporate-client/';const client=window.supabase.createClient(url,key,{auth:{storageKey:'lbp-corporate-client-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const companyEmail=e=>{const v=String(e||'').trim().toLowerCase(),d=v.split('@')[1]||'',blocked=['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com','proton.me','protonmail.com'];if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))return'Enter a valid company email.';if(blocked.includes(d))return'Use an authorised company email, not a personal email service.';return''};const passwordErrors=(p,c=p)=>{const e=[];if(p.length<8)e.push('Use at least 8 characters.');if(!/[A-Z]/.test(p))e.push('Include one capital letter.');if(!/[^A-Za-z0-9]/.test(p))e.push('Include one special character.');if(/(.)\1\1/i.test(p))e.push('Do not repeat a character 3 times.');if(p!==c)e.push('Passwords must match.');return e};async function profile(){const{data:{session}}=await client.auth.getSession();if(!session)return null;const{data:p}=await client.from('profiles').select('id,full_name,role,is_active,client_id').eq('id',session.user.id).maybeSingle();return p&&p.role==='corporate_client'&&p.is_active?{session,profile:p}:null}async function register(v){const ee=companyEmail(v.email),pe=passwordErrors(v.password,v.confirmation);if(ee||pe[0])throw new Error(ee||pe[0]);const{data,error}=await client.auth.signUp({email:v.email.trim().toLowerCase(),password:v.password,options:{emailRedirectTo:new URL('login.html?verified=1',base).href,data:{registration_type:'corporate_client',company_name:v.company,contact_name:v.name,phone:v.phone,tier:v.tier}}});if(error)throw error;if(data.session)await client.auth.signOut();return data}async function verify(email,token){const{data,error}=await client.auth.verifyOtp({email:email.trim().toLowerCase(),token:token.replace(/\D/g,''),type:'email'});if(error)throw error;if(data.session)await client.auth.signOut();return data}async function reset(email){const e=companyEmail(email);if(e)throw new Error(e);const{error}=await client.auth.resetPasswordForEmail(email.trim().toLowerCase(),{redirectTo:new URL('recovery.html',base).href});if(error)throw error}window.LBPCorporate={client,companyEmail,passwordErrors,profile,register,verify,reset};})();
+(function () {
+  'use strict';
+  const url = 'https://biwwfxfpcsanszxrxhyw.supabase.co';
+  const key = 'sb_publishable_sB3GSSdJi477vhQAmjABnw_DT4sknEb';
+  const base = 'https://management.ptlbp.co.id/corporate-client/';
+  const client = window.supabase.createClient(url, key, { auth: { storageKey: 'lbp-corporate-client-auth-v1', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  const companyEmail = email => {
+    const value = String(email || '').trim().toLowerCase();
+    const domain = value.split('@')[1] || '';
+    const blocked = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'proton.me', 'protonmail.com'];
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid company email.';
+    if (blocked.includes(domain)) return 'Use an authorised company email, not a personal email service.';
+    return '';
+  };
+  const passwordErrors = (password, confirmation = password) => {
+    const errors = [];
+    if (password.length < 8) errors.push('Use at least 8 characters.');
+    if (!/[A-Z]/.test(password)) errors.push('Include one capital letter.');
+    if (!/[^A-Za-z0-9]/.test(password)) errors.push('Include one special character.');
+    if (/(.)\1\1/i.test(password)) errors.push('Do not repeat a character 3 times.');
+    if (password !== confirmation) errors.push('Passwords must match.');
+    return errors;
+  };
+  async function profile() {
+    const { data: { session } } = await client.auth.getSession();
+    if (!session) return null;
+    const { data: currentProfile } = await client.from('profiles').select('id,full_name,role,is_active,client_id').eq('id', session.user.id).maybeSingle();
+    return currentProfile && currentProfile.role === 'corporate_client' && currentProfile.is_active ? { session, profile: currentProfile } : null;
+  }
+  async function register(values) {
+    const emailError = companyEmail(values.email);
+    const passwordError = passwordErrors(values.password, values.confirmation)[0];
+    if (emailError || passwordError) throw new Error(emailError || passwordError);
+    if (!values.captchaToken) throw new Error('Complete the security verification before registering.');
+    const { data, error } = await client.auth.signUp({
+      email: values.email.trim().toLowerCase(),
+      password: values.password,
+      options: {
+        captchaToken: values.captchaToken,
+        emailRedirectTo: new URL('login.html?verified=1', base).href,
+        data: { registration_type: 'corporate_client', company_name: values.company.trim(), contact_name: values.name.trim(), phone: values.phone.trim(), tier: values.tier }
+      }
+    });
+    if (error) throw error;
+    if (data.session) await client.auth.signOut();
+    return data;
+  }
+  async function verify(email, token) {
+    const { data, error } = await client.auth.verifyOtp({ email: email.trim().toLowerCase(), token: token.replace(/\D/g, ''), type: 'email' });
+    if (error) throw error;
+    if (data.session) await client.auth.signOut();
+    return data;
+  }
+  async function reset(email) {
+    const emailError = companyEmail(email);
+    if (emailError) throw new Error(emailError);
+    const { error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: new URL('recovery.html', base).href });
+    if (error) throw error;
+  }
+  window.LBPCorporate = { client, companyEmail, passwordErrors, profile, register, verify, reset };
+})();
