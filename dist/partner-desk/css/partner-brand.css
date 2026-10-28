@@ -145,6 +145,41 @@
   text-decoration: underline;
 }
 
+.partner-auth-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.partner-auth-form .partner-auth-outline {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #1e40af;
+  border-radius: 8px;
+  background: #fff;
+  color: #1e40af;
+  font: 700 12px Manrope, sans-serif;
+  cursor: pointer;
+}
+
+.partner-auth-form .partner-auth-outline:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+#recovery-pin-section {
+  display: grid;
+  gap: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #dbe4ef;
+}
+
+#recovery-nonce {
+  font: 700 22px "IBM Plex Mono", monospace;
+  letter-spacing: .3em;
+  text-align: center;
+}
+
 @media (max-width: 680px) {
   .partner-brand-logo {
     width: 92px;

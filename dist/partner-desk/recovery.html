@@ -21,8 +21,12 @@
         <div><span class="partner-eyebrow">Password recovery</span><h1>Create a new password</h1><p>Use a unique institutional password that meets every requirement.</p></div>
       </header>
       <form id="new-password-form" class="partner-auth-form">
-        <label>New Password<input id="new-password" type="password" required autocomplete="new-password"></label>
-        <label>Confirm New Password<input id="new-password-confirm" type="password" required autocomplete="new-password"></label>
+        <button id="send-recovery-pin" class="partner-auth-outline" type="button" disabled>Send verification PIN</button>
+        <div id="recovery-pin-section" hidden>
+          <label>Email Verification PIN<input id="recovery-nonce" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required placeholder="000000"></label>
+          <label>New Password<input id="new-password" type="password" required autocomplete="new-password"></label>
+          <label>Confirm New Password<input id="new-password-confirm" type="password" required autocomplete="new-password"></label>
+        </div>
         <div class="password-requirements">
           <span data-rule="length">At least 8 characters</span>
           <span data-rule="capital">One capital letter</span>
@@ -30,25 +34,28 @@
           <span data-rule="repeat">No character repeated 3 times</span>
           <span data-rule="match">Passwords match</span>
         </div>
-        <button class="partner-config-save" type="submit" disabled>Update password</button>
+        <button class="partner-config-save" type="submit" disabled>Verify PIN &amp; update password</button>
         <p id="new-password-status" class="partner-auth-status" role="status">Validating your secure recovery link…</p>
       </form>
       <footer class="partner-auth-footer"><a href="forgot-password.html">Request a new recovery link</a><a href="login.html">Return to sign in</a></footer>
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/partner-desk-supabase.js?v=20261027-recovery-v2"></script>
+  <script src="js/partner-desk-supabase.js?v=20261028-recovery-pin"></script>
   <script>
     const password = document.querySelector("#new-password");
     const confirmation = document.querySelector("#new-password-confirm");
     const status = document.querySelector("#new-password-status");
     const form = document.querySelector("#new-password-form");
     const submit = form.querySelector('button[type="submit"]');
+    const sendPin = document.querySelector("#send-recovery-pin");
+    const pinSection = document.querySelector("#recovery-pin-section");
+    const nonce = document.querySelector("#recovery-nonce");
 
     window.LBPPartnerDeskSupabase.initialiseRecoverySession().then(() => {
-      status.textContent = "Recovery link verified. Enter your new password.";
+      status.textContent = "Recovery link verified. Request a six-digit verification PIN to continue.";
       status.className = "partner-auth-status success";
-      submit.disabled = false;
+      sendPin.disabled = false;
     }).catch((error) => {
       status.textContent = error.message || "The recovery link is invalid or has expired.";
       status.className = "partner-auth-status error";
@@ -69,12 +76,28 @@
 
     password.oninput = showRules;
     confirmation.oninput = showRules;
+    sendPin.addEventListener("click", async () => {
+      sendPin.disabled = true;
+      try {
+        const email = await window.LBPPartnerDeskSupabase.sendRecoveryReauthenticationCode();
+        pinSection.hidden = false;
+        submit.disabled = false;
+        status.textContent = `A six-digit verification PIN was sent to ${email}. Enter it before saving the new password.`;
+        status.className = "partner-auth-status success";
+        nonce.focus();
+      } catch (error) {
+        status.textContent = error.message || "The verification PIN could not be sent.";
+        status.className = "partner-auth-status error";
+      } finally {
+        sendPin.disabled = false;
+      }
+    });
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const button = event.submitter;
       button.disabled = true;
       try {
-        await window.LBPPartnerDeskSupabase.updatePassword(password.value, confirmation.value);
+        await window.LBPPartnerDeskSupabase.updatePassword(password.value, confirmation.value, nonce.value);
         status.textContent = "Password updated. Redirecting to sign in…";
         status.className = "partner-auth-status success";
         setTimeout(() => location.replace("login.html?password=updated"), 1600);

@@ -160,6 +160,14 @@
     await client.auth.signOut();
   }
 
+  async function sendRecoveryReauthenticationCode() {
+    const { data: { session }, error: sessionError } = await client.auth.getSession();
+    if (sessionError || !session) throw new Error("The recovery session is missing or expired. Request a new password reset email.");
+    const { error } = await client.auth.reauthenticate();
+    if (error) throw error;
+    return session.user.email;
+  }
+
   async function loadPartnerDesk(partnerId) {
     const results = await Promise.all([
       client.from("partner_desks").select("*").eq("id", partnerId).maybeSingle(),
@@ -189,5 +197,5 @@
     if (auditError) console.warn("Partner quote saved, but the audit event was not recorded.", auditError);
   }
 
-  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, verifyPartnerEmailOtp, resendPartnerEmailOtp, requestPasswordReset, initialiseRecoverySession, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, text };
+  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, verifyPartnerEmailOtp, resendPartnerEmailOtp, requestPasswordReset, initialiseRecoverySession, sendRecoveryReauthenticationCode, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, text };
 })();
