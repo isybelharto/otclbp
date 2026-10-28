@@ -58,13 +58,18 @@ html:lang(hi) .serif,html:lang(zh-CN) .serif,html:lang(ja) .serif,html:lang(ko) 
 .partner-invitation h2{max-width:14ch;font-size:clamp(34px,3.5vw,52px);letter-spacing:-.05em}
 .partner-invitation-copy>p:not(.partner-registration-note){max-width:62ch;margin-top:22px;color:#c8d8d7;font-size:13px;line-height:1.85}
 .partner-register-button{margin-top:28px}
+.corporate-invitation{padding-top:0}
+.corporate-invitation-panel{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:70px;align-items:center;padding:56px 60px;border:1px solid #b8c6eb;background:linear-gradient(135deg,#f4f7ff,#e7efff);color:var(--navy);border-radius:14px;box-shadow:0 24px 60px #0c233012}
+.corporate-invitation-copy{position:relative;z-index:1}.corporate-invitation .eyebrow{margin-bottom:18px;color:#234fc3}.corporate-invitation h2{max-width:16ch;font-size:clamp(34px,3.5vw,52px);letter-spacing:-.05em}.corporate-invitation-copy>p:not(.partner-registration-note){max-width:62ch;margin-top:22px;color:#50627d;font-size:13px;line-height:1.85}.corporate-invitation .partner-registration-note{color:#50627d}.corporate-invitation .partner-capability{background:#fff;border-color:#c9d6f2;color:var(--navy)}.corporate-invitation .partner-capability span{background:#dce8ff;color:#234fc3}.corporate-actions{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}.corporate-actions .button{margin:0}.nav-client-cta{background:#eef3ff;color:#234fc3;border-color:#b8c6eb;gap:10px}.nav-client-cta:hover{background:#dce8ff;color:var(--navy);border-color:#7493dc}.nav-client-cta .icon{width:16px;height:16px}
 .partner-registration-note{max-width:66ch;margin-top:16px;color:#9fb8b6;font-family:var(--mono);font-size:9px;line-height:1.7}
 .partner-capabilities{position:relative;z-index:1;display:grid;gap:12px}
 .partner-capability{display:flex;align-items:center;gap:16px;min-height:68px;padding:16px 18px;border:1px solid #88afa54d;background:#ffffff0b;border-radius:8px}
 .partner-capability span{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--mint);color:var(--navy);font-weight:700}
 .partner-capability strong{font-size:12px;line-height:1.55;font-weight:600;color:#edf5f1}
 @media(max-width:900px){.partner-invitation-panel{grid-template-columns:1fr;gap:34px;padding:44px 38px}.partner-capabilities{grid-template-columns:repeat(3,minmax(0,1fr))}.partner-capability{align-items:flex-start;flex-direction:column;min-height:132px}}
+@media(max-width:900px){.corporate-invitation-panel{grid-template-columns:1fr;gap:34px;padding:44px 38px}}
 @media(max-width:700px){.partner-invitation{padding-bottom:72px}.partner-invitation-panel{width:calc(100% - 32px);padding:34px 24px}.partner-invitation h2{font-size:36px}.partner-capabilities{grid-template-columns:1fr}.partner-capability{align-items:center;flex-direction:row;min-height:64px}.partner-register-button{width:100%}}
+@media(max-width:700px){.corporate-invitation{padding-bottom:72px}.corporate-invitation-panel{width:calc(100% - 32px);padding:34px 24px}.corporate-invitation h2{font-size:36px}.corporate-actions{flex-direction:column}.corporate-actions .button{width:100%}.navigation .nav-client-cta{width:100%;margin-left:0}}
 /* Keep all three header controls on one row, including the browser scrollbar. */
 .hero-minimum strong{white-space:nowrap}.hero-minimum>div{flex-shrink:0}.hero-minimum p{min-width:0;overflow-wrap:break-word}
 @media(max-width:700px){.brand img{width:162px}}
