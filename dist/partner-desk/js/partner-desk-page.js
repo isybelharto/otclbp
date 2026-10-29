@@ -13,6 +13,15 @@
     ["fiat", "Fiat History"],
     ["crypto", "Crypto History"],
   ];
+  const tabIcons = {
+    dashboard: "fi fi-rr-apps",
+    history: "fi fi-rr-time-past",
+    liquidity: "fi fi-rr-chart-line-up",
+    accounts: "fi fi-rr-bank",
+    wallets: "fi fi-rr-wallet",
+    fiat: "fi fi-rr-money-bill-transfer",
+    crypto: "fi fi-rr-coins",
+  };
 
   let access = null;
   let allowedDesks = [];
@@ -66,33 +75,41 @@
       : `<div class="partner-session"><span>${escapeHtml(profile.full_name || desk.operator_name || "Partner operator")}</span><strong>${escapeHtml(desk.display_name)}</strong></div>`;
 
     app.innerHTML = `
-      <header class="partner-top">
-        <a class="partner-brand" href="./" aria-label="LBP OTC Partner Desk">
-          <img class="partner-brand-logo" src="assets/lbp-crypto-fiat-logo.png" alt="PT Lintas Batas Pembayaran">
-          <span>PT LINTAS BATAS<small>PARTNER OTC DESK</small></span>
-        </a>
-        <div class="partner-top-actions">
-          ${deskControl}
-          ${isManagement ? '<a class="partner-action ghost" href="../">Management</a>' : ""}
-          <button class="partner-action ghost" id="partner-sign-out" type="button">Sign out</button>
-          <button class="partner-mobile-tab-toggle" id="partner-mobile-tab-toggle" type="button" aria-label="Open workspace menu" aria-controls="partner-tabs" aria-expanded="false">☰</button>
-        </div>
-      </header>
-      <main class="partner-page">
-        <section class="partner-heading">
-          <div>
-            <span class="partner-eyebrow">Authenticated exchange workspace</span>
-            <h1>${escapeHtml(desk.display_name)} OTC Partner Desk</h1>
-            <p>${escapeHtml(desk.legal_name || desk.display_name)} · ${escapeHtml(desk.jurisdiction || "Jurisdiction pending")}</p>
-          </div>
-          ${badge(desk.status || "Active")}
-        </section>
+      <div class="partner-workspace">
+        <aside class="partner-sidebar" id="partner-sidebar">
+          <a class="partner-brand" href="./" aria-label="LBP OTC Partner Desk">
+            <img class="partner-brand-logo" src="assets/lbp-crypto-fiat-logo.png" alt="PT Lintas Batas Pembayaran">
+            <span>PT LINTAS BATAS<small>PARTNER OTC DESK</small></span>
+          </a>
+          <nav class="partner-tabs" id="partner-tabs" aria-label="Partner Desk modules">
+            <span class="partner-nav-group">Operations</span>
+            ${tabs.map(([id, label]) => `${id === "accounts" ? '<span class="partner-nav-group">Settlement</span>' : ""}<button class="partner-tab ${activeTab === id ? "active" : ""}" type="button" data-tab="${id}" aria-selected="${activeTab === id}"><i class="${tabIcons[id]}" aria-hidden="true"></i><span>${label}</span></button>`).join("")}
+          </nav>
+        </aside>
         <button class="partner-tab-backdrop" id="partner-tab-backdrop" type="button" aria-label="Close workspace menu"></button>
-        <nav class="partner-tabs" id="partner-tabs" aria-label="Partner Desk modules">
-          ${tabs.map(([id, label]) => `<button class="partner-tab ${activeTab === id ? "active" : ""}" type="button" data-tab="${id}" aria-selected="${activeTab === id}">${label}</button>`).join("")}
-        </nav>
-        <section id="partner-tab-content"></section>
-      </main>`;
+        <main class="partner-main">
+          <header class="partner-top">
+            <div class="partner-portal-title"><span>LBP OTC</span><small>Institutional Partner Desk</small></div>
+            <div class="partner-top-actions">
+              ${deskControl}
+              ${isManagement ? '<a class="partner-action ghost" href="../">Management</a>' : ""}
+              <button class="partner-action ghost" id="partner-sign-out" type="button">Sign out</button>
+              <button class="partner-mobile-tab-toggle" id="partner-mobile-tab-toggle" type="button" aria-label="Open workspace menu" aria-controls="partner-sidebar" aria-expanded="false">☰</button>
+            </div>
+          </header>
+          <div class="partner-page">
+            <section class="partner-heading">
+              <div>
+                <span class="partner-eyebrow">Authenticated exchange workspace</span>
+                <h1>${escapeHtml(desk.display_name)} OTC Partner Desk</h1>
+                <p>${escapeHtml(desk.legal_name || desk.display_name)} · ${escapeHtml(desk.jurisdiction || "Jurisdiction pending")}</p>
+              </div>
+              ${badge(desk.status || "Active")}
+            </section>
+            <section id="partner-tab-content"></section>
+          </div>
+        </main>
+      </div>`;
 
     document.querySelectorAll("[data-tab]").forEach((button) => {
       button.addEventListener("click", () => {
