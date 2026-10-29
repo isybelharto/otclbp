@@ -28,6 +28,11 @@
     ["company", "Company Profile"], ["directors", "Directors"], ["owners", "Beneficial Owners"],
     ["funds", "Source & Purpose"], ["financial", "Financial & Bank"], ["documents", "Documents & Declaration"],
   ];
+  const tabIcons = {
+    dashboard: "fi fi-rr-apps", request: "fi fi-rr-clipboard-list", history: "fi fi-rr-time-past",
+    company: "fi fi-rr-building", directors: "fi fi-rr-user", owners: "fi fi-rr-users",
+    funds: "fi fi-rr-hand-holding-usd", financial: "fi fi-rr-bank", documents: "fi fi-rr-document",
+  };
 
   const access = await api.profile();
   if (!access) {
@@ -56,9 +61,19 @@
     el("menu").setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
   }
 
-  nav.innerHTML = tabDefs.map(([id, name], index) => `<button data-tab="${id}" class="${index ? "" : "active"}">${name}</button>`).join("");
+  function setDesktopNavigation(collapsed) {
+    document.querySelector(".app").classList.toggle("corporate-sidebar-collapsed", collapsed);
+    localStorage.setItem("lbpCorporateSidebarCollapsed", String(collapsed));
+    el("menu").setAttribute("aria-label", collapsed ? "Show navigation" : "Hide navigation");
+  }
+
+  nav.innerHTML = tabDefs.map(([id, name], index) => `${[0, 3, 6].includes(index) ? `<span class="nav-group">${index === 0 ? "Operations" : index === 3 ? "Profile & KYB" : "Financial controls"}</span>` : ""}<button data-tab="${id}" class="${index ? "" : "active"}"><i class="${tabIcons[id]}" aria-hidden="true"></i><span>${name}</span></button>`).join("");
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => setTab(button.dataset.tab)));
-  el("menu").addEventListener("click", () => setMobileNavigation(!sidebar.classList.contains("open")));
+  setDesktopNavigation(localStorage.getItem("lbpCorporateSidebarCollapsed") === "true");
+  el("menu").addEventListener("click", () => {
+    if (window.matchMedia("(max-width: 760px)").matches) setMobileNavigation(!sidebar.classList.contains("open"));
+    else setDesktopNavigation(!document.querySelector(".app").classList.contains("corporate-sidebar-collapsed"));
+  });
   navBackdrop.addEventListener("click", () => setMobileNavigation(false));
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") setMobileNavigation(false); });
   el("signout").addEventListener("click", async () => {

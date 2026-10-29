@@ -94,7 +94,7 @@
               ${deskControl}
               ${isManagement ? '<a class="partner-action ghost" href="../">Management</a>' : ""}
               <button class="partner-action ghost" id="partner-sign-out" type="button">Sign out</button>
-              <button class="partner-mobile-tab-toggle" id="partner-mobile-tab-toggle" type="button" aria-label="Open workspace menu" aria-controls="partner-sidebar" aria-expanded="false">☰</button>
+              <button class="partner-mobile-tab-toggle" id="partner-mobile-tab-toggle" type="button" aria-label="Hide navigation" aria-controls="partner-sidebar" aria-expanded="false">☰</button>
             </div>
           </header>
           <div class="partner-page">
@@ -121,12 +121,22 @@
     });
     const mobileTabsToggle = document.querySelector("#partner-mobile-tab-toggle");
     const mobileTabsBackdrop = document.querySelector("#partner-tab-backdrop");
+    const workspace = document.querySelector(".partner-workspace");
     const setMobileTabs = (open) => {
       document.body.classList.toggle("partner-tab-menu-open", open);
       mobileTabsToggle.setAttribute("aria-expanded", String(open));
       mobileTabsToggle.setAttribute("aria-label", open ? "Close workspace menu" : "Open workspace menu");
     };
-    mobileTabsToggle.addEventListener("click", () => setMobileTabs(!document.body.classList.contains("partner-tab-menu-open")));
+    const setDesktopSidebar = (collapsed) => {
+      workspace.classList.toggle("partner-sidebar-collapsed", collapsed);
+      localStorage.setItem("lbpPartnerSidebarCollapsed", String(collapsed));
+      mobileTabsToggle.setAttribute("aria-label", collapsed ? "Show navigation" : "Hide navigation");
+    };
+    setDesktopSidebar(localStorage.getItem("lbpPartnerSidebarCollapsed") === "true");
+    mobileTabsToggle.addEventListener("click", () => {
+      if (window.matchMedia("(max-width: 760px)").matches) setMobileTabs(!document.body.classList.contains("partner-tab-menu-open"));
+      else setDesktopSidebar(!workspace.classList.contains("partner-sidebar-collapsed"));
+    });
     mobileTabsBackdrop.addEventListener("click", () => setMobileTabs(false));
     document.querySelector("#partner-sign-out").addEventListener("click", async () => {
       await api.client.auth.signOut();
