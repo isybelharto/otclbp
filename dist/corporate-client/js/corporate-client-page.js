@@ -14,6 +14,10 @@
   }[character]));
   const number = (value) => Number(value || 0);
   const money = (value, currency = "IDR") => `${new Intl.NumberFormat("en-US", { maximumFractionDigits: currency === "IDR" ? 0 : 8 }).format(number(value))} ${currency}`;
+  const currencyTotal = (value, currency) => {
+    const formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: currency === "IDR" ? 0 : 8 }).format(number(value));
+    return currency === "IDR" ? `Rp ${formatted}` : `${formatted} ${currency}`;
+  };
   const mask = (value) => {
     const clean = String(value || "");
     return clean.length > 8 ? `${clean.slice(0, 4)}••••${clean.slice(-4)}` : "••••";
@@ -111,10 +115,33 @@
 
   function render(requests, documents, bankAccounts, wallets) {
     el("kyb_pill").textContent = `KYB ${String(onboarding.kyb_status || "draft").toUpperCase()}`;
+    // Only settled requests are included here so the dashboard never treats a
+    // quote, a pending request, or a rejected request as completed client flow.
+    const settledRequests = requests.filter((row) => String(row.status || "").toLowerCase() === "settled");
+    const totals = settledRequests.reduce((result, row) => {
+      const inputAsset = String(row.input_asset || "").toUpperCase();
+      const outputAsset = String(row.output_asset || "").toUpperCase();
+      const inputAmount = number(row.input_amount);
+      const outputAmount = number(row.estimated_output);
+      if (inputAsset === "IDR") result.fiatOutIdr += inputAmount;
+      if (inputAsset === "USD") result.fiatOutUsd += inputAmount;
+      if (outputAsset === "IDR") result.fiatInIdr += outputAmount;
+      if (outputAsset === "USD") result.fiatInUsd += outputAmount;
+      if (inputAsset === "USDT") result.cryptoOutUsdt += inputAmount;
+      if (outputAsset === "USDT") result.cryptoInUsdt += outputAmount;
+      return result;
+    }, { fiatOutIdr: 0, fiatOutUsd: 0, fiatInIdr: 0, fiatInUsd: 0, cryptoOutUsdt: 0, cryptoInUsdt: 0 });
+    const fiat = (idr, usd) => {
+      const values = [];
+      if (idr || !usd) values.push(currencyTotal(idr, "IDR"));
+      if (usd) values.push(currencyTotal(usd, "USD"));
+      return values.join(" · ");
+    };
     el("metrics").innerHTML = [
-      ["Company", clientRow.legal_name], ["KYB Status", onboarding.kyb_status],
-      ["Active Requests", requests.filter((row) => !["settled", "rejected", "cancelled", "expired"].includes(row.status)).length],
-      ["Partner Desks", deskQuotes.length],
+      ["Total Fiat Out", fiat(totals.fiatOutIdr, totals.fiatOutUsd)],
+      ["Total Fiat In", fiat(totals.fiatInIdr, totals.fiatInUsd)],
+      ["Total Crypto Out", currencyTotal(totals.cryptoOutUsdt, "USDT")],
+      ["Total Crypto In", currencyTotal(totals.cryptoInUsdt, "USDT")],
     ].map(([label, value]) => `<div class="card metric"><span class="eyebrow">${esc(label)}</span><strong>${esc(value)}</strong></div>`).join("");
 
     el("quotes").innerHTML = deskQuotes.map(({ display_name, quote }) => `<article class="card quote-card">
