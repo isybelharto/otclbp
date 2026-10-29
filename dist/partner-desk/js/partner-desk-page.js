@@ -93,7 +93,7 @@
             <div class="partner-top-actions">
               ${deskControl}
               ${isManagement ? '<a class="partner-action ghost" href="../">Management</a>' : ""}
-              <button class="partner-action ghost" id="partner-sign-out" type="button">Sign out</button>
+              <div id="partner-profile-menu"></div>
               <button class="partner-mobile-tab-toggle" id="partner-mobile-tab-toggle" type="button" aria-label="Hide navigation" aria-controls="partner-sidebar" aria-expanded="false">☰</button>
             </div>
           </header>
@@ -138,9 +138,13 @@
       else setDesktopSidebar(!workspace.classList.contains("partner-sidebar-collapsed"));
     });
     mobileTabsBackdrop.addEventListener("click", () => setMobileTabs(false));
-    document.querySelector("#partner-sign-out").addEventListener("click", async () => {
-      await api.client.auth.signOut();
-      window.location.replace("login.html");
+    window.LBPProfileMenu?.mount({
+      container: document.querySelector("#partner-profile-menu"),
+      client: api.client,
+      session: access.session,
+      profile: access.profile,
+      changePasswordHref: "change-password.html",
+      loginHref: "login.html",
     });
     const partnerSwitch = document.querySelector("#partner-switch");
     if (partnerSwitch) {

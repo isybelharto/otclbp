@@ -80,9 +80,13 @@
   });
   navBackdrop.addEventListener("click", () => setMobileNavigation(false));
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") setMobileNavigation(false); });
-  el("signout").addEventListener("click", async () => {
-    await c.auth.signOut();
-    location.replace("login.html");
+  window.LBPProfileMenu?.mount({
+    container: el("profile_menu"),
+    client: c,
+    session: access.session,
+    profile: access.profile,
+    changePasswordHref: "change-password.html",
+    loginHref: "login.html",
   });
 
   async function load() {
