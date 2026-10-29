@@ -30,3 +30,6 @@
 
 /* Keep repeatable beneficial-owner forms and the add action visually distinct. */
 #owner_list{display:grid;gap:20px;margin-bottom:22px}#owner_list .owner-form{margin-top:0!important;padding:0 0 20px;border-bottom:1px solid var(--line)}#owner_list .owner-form:last-child{border-bottom:0;padding-bottom:0}#owner_list .owner-form .btn{margin-top:2px;min-height:46px}#add_owner{display:inline-flex;align-items:center;justify-content:center;min-height:42px;margin-top:2px;padding:10px 16px;border:1px solid #b9c8ea;border-radius:7px;background:#fff;color:var(--blue);font-weight:800;box-shadow:none}#add_owner:hover{border-color:var(--blue);background:#eef4ff}
+
+/* Shared LBP sidebar typography: compact, high-trust institutional navigation. */
+.sidebar .brand strong{font-family:Manrope,Arial,sans-serif;font-size:14px;font-weight:800;line-height:1.2;letter-spacing:.015em}.sidebar .brand small{font-family:Manrope,Arial,sans-serif;font-size:10px;font-weight:700;line-height:1.35;letter-spacing:.11em}.nav button{font-family:Manrope,Arial,sans-serif;font-size:14px;font-weight:700;line-height:1.35;letter-spacing:-.01em}.nav button.active{font-weight:800}@media(max-width:760px){.nav button{font-size:14px;padding:13px 14px}}
