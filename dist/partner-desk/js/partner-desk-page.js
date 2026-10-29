@@ -26,7 +26,9 @@
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-  const number = (value) => Number(value || 0);
+  // Partner-entered amounts are displayed with thousands separators while they
+  // are typed. Normalise them before every calculation or database write.
+  const number = (value) => Number(String(value ?? "").replaceAll(",", "").trim() || 0);
   const idr = (value) => new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -40,6 +42,11 @@
     return idr(amount);
   };
   const quantity = (value, asset, maximumFractionDigits = 4) => `${number(value).toLocaleString("en-US", { maximumFractionDigits })} ${asset}`;
+  const quoteSpread = (quote) => Math.max(0, number(quote.sell_price) - number(quote.buy_price));
+  const quoteSpreadPercent = (quote) => {
+    const buy = number(quote.buy_price);
+    return buy > 0 ? quoteSpread(quote) / buy * 100 : 0;
+  };
   const dateTime = (value) => value
     ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" }).format(new Date(value)) + " WIB"
     : "Not submitted";
@@ -147,7 +154,11 @@
           </header>
           <div class="partner-card-body">
             <div class="partner-kpis">
+              <div class="partner-kpi"><label>Buy Price</label><strong>${idr(quote.buy_price)}</strong><span>Latest partner quote</span></div>
+              <div class="partner-kpi"><label>Sell Price</label><strong>${idr(quote.sell_price)}</strong><span>Latest partner quote</span></div>
+              <div class="partner-kpi"><label>Spread</label><strong>${idr(quoteSpread(quote))}</strong><span>${quoteSpreadPercent(quote).toFixed(3)}% calculated automatically</span></div>
               <div class="partner-kpi"><label>Available USDT</label><strong>${quantity(quote.available_usdt, "USDT", 2)}</strong><span>Latest submitted capacity</span></div>
+              <div class="partner-kpi"><label>Available USD</label><strong>${quantity(quote.available_usd, "USD", 2)}</strong><span>Partner settlement capacity</span></div>
               <div class="partner-kpi"><label>Available IDR</label><strong>${compactIdr(quote.available_idr)}</strong><span>Partner settlement capacity</span></div>
               <div class="partner-kpi"><label>Settled Fiat Volume</label><strong>${compactIdr(summary.fiatVolume)}</strong><span>Recorded settlement history</span></div>
               <div class="partner-kpi"><label>Settlement Records</label><strong>${summary.settlements.toLocaleString("en-US")}</strong><span>Fiat and on-chain records</span></div>
@@ -173,17 +184,14 @@
         </header>
         <form class="partner-card-body" id="partner-quote-form">
           <div class="partner-config-fields">
-            <label>Buy Price (IDR)<input type="number" min="0" step="1" id="partner-buy" value="${escapeHtml(quote.buy_price || "")}" required></label>
-            <label>Sell Price (IDR)<input type="number" min="0" step="1" id="partner-sell" value="${escapeHtml(quote.sell_price || "")}" required></label>
-            <label>Spread %<input type="number" min="0" step="0.001" id="partner-spread" value="${escapeHtml(quote.spread_percent ?? "")}" required></label>
-            <label>Fee %<input type="number" min="0" step="0.001" id="partner-fee" value="${escapeHtml(quote.fee_percent ?? "")}" required></label>
+            <label>Buy Price (IDR)<input type="text" inputmode="decimal" autocomplete="off" class="partner-number-input" id="partner-buy" value="${escapeHtml(number(quote.buy_price).toLocaleString("en-US", { maximumFractionDigits: 2 }))}" required></label>
+            <label>Sell Price (IDR)<input type="text" inputmode="decimal" autocomplete="off" class="partner-number-input" id="partner-sell" value="${escapeHtml(number(quote.sell_price).toLocaleString("en-US", { maximumFractionDigits: 2 }))}" required></label>
           </div>
           <div class="partner-form-divider"><span>Available liquidity</span></div>
           <div class="partner-config-fields partner-volume-fields">
-            <label>Available USDT<input type="number" min="0" step="0.01" id="partner-usdt" value="${escapeHtml(quote.available_usdt ?? "")}" required></label>
-            <label>Available USDC<input type="number" min="0" step="0.01" id="partner-usdc" value="${escapeHtml(quote.available_usdc ?? "")}" required></label>
-            <label>Available BTC<input type="number" min="0" step="0.00000001" id="partner-btc" value="${escapeHtml(quote.available_btc ?? "")}" required></label>
-            <label>Available IDR<input type="number" min="0" step="1" id="partner-idr" value="${escapeHtml(quote.available_idr ?? "")}" required></label>
+            <label>Available USDT<input type="text" inputmode="decimal" autocomplete="off" class="partner-number-input" id="partner-usdt" value="${escapeHtml(number(quote.available_usdt).toLocaleString("en-US", { maximumFractionDigits: 2 }))}" required></label>
+            <label>Available USD<input type="text" inputmode="decimal" autocomplete="off" class="partner-number-input" id="partner-usd" value="${escapeHtml(number(quote.available_usd).toLocaleString("en-US", { maximumFractionDigits: 2 }))}" required></label>
+            <label>Available IDR<input type="text" inputmode="decimal" autocomplete="off" class="partner-number-input" id="partner-idr" value="${escapeHtml(number(quote.available_idr).toLocaleString("en-US", { maximumFractionDigits: 2 }))}" required></label>
           </div>
           <label class="partner-note-field">Submission note<textarea id="partner-note" rows="2" maxlength="500" placeholder="Optional execution or liquidity note">${escapeHtml(quote.note || "")}</textarea></label>
           <p class="partner-form-status" id="partner-form-status" role="status"></p>
@@ -195,17 +203,17 @@
   function renderQuoteHistory() {
     const rows = (currentRecord.quotes || []).map((row) => `<tr>
       <td>${escapeHtml(dateTime(row.quoted_at))}</td><td class="mono">${escapeHtml(idr(row.buy_price))}</td><td class="mono">${escapeHtml(idr(row.sell_price))}</td>
-      <td class="mono">${number(row.spread_percent).toFixed(3)}%</td><td class="mono">${number(row.fee_percent).toFixed(3)}%</td>
-      <td class="mono">${escapeHtml(quantity(row.available_usdt, "USDT", 2))}</td><td>${badge(row.id === latestQuote().id ? "Current" : "Recorded")}</td>
+      <td class="mono">${escapeHtml(quantity(row.available_usd, "USD", 2))}</td><td class="mono">${escapeHtml(quantity(row.available_usdt, "USDT", 2))}</td>
+      <td class="mono">${escapeHtml(compactIdr(row.available_idr))}</td><td>${badge(row.id === latestQuote().id ? "Current" : "Recorded")}</td>
     </tr>`).join("") || emptyRow(7, "No partner quote has been submitted yet.");
-    return tableCard("Daily Quote & Availability History", "Every submitted quote remains available for review.", ["Date / Time", "Buy Price", "Sell Price", "Spread", "Fee", "Available USDT", "Status"], rows);
+    return tableCard("Daily Quote & Availability History", "Every submitted quote remains available for review.", ["Date / Time", "Buy Price", "Sell Price", "Available USD", "Available USDT", "Available IDR", "Status"], rows);
   }
 
   function renderLiquidity() {
     const quote = latestQuote();
-    const items = [["USDT", quote.available_usdt, "USDT", "#1e40af"], ["USDC", quote.available_usdc, "USDC", "#059669"], ["BTC", quote.available_btc, "BTC", "#7c3aed"], ["IDR", quote.available_idr, "IDR", "#f59e0b"]];
+    const items = [["USD", quote.available_usd, "USD", "#059669"], ["USDT", quote.available_usdt, "USDT", "#1e40af"], ["IDR", quote.available_idr, "IDR", "#f59e0b"]];
     const max = Math.max(...items.map((item) => number(item[1])), 1);
-    return `<article class="partner-card partner-tab-card"><header class="partner-card-head"><div><h2>Available Liquidity</h2><p>Liquidity from the latest partner quote submitted ${escapeHtml(dateTime(quote.quoted_at))}.</p></div>${badge(quote.id ? "Current" : "Pending")}</header><div class="partner-liquidity-grid">${items.map(([label, value, asset, color]) => `<div class="partner-liquidity-card"><span>${label}</span><strong>${asset === "IDR" ? compactIdr(value) : quantity(value, asset, asset === "BTC" ? 8 : 2)}</strong><div class="liquidity-bar"><i style="width:${Math.max(2, Math.min(100, number(value) / max * 100))}%;background:${color}"></i></div></div>`).join("")}</div></article>`;
+    return `<article class="partner-card partner-tab-card"><header class="partner-card-head"><div><h2>Available Liquidity</h2><p>Liquidity from the latest partner quote submitted ${escapeHtml(dateTime(quote.quoted_at))}.</p></div>${badge(quote.id ? "Current" : "Pending")}</header><div class="partner-liquidity-grid">${items.map(([label, value, asset, color]) => `<div class="partner-liquidity-card"><span>${label}</span><strong>${asset === "IDR" ? compactIdr(value) : quantity(value, asset, 2)}</strong><div class="liquidity-bar"><i style="width:${Math.max(2, Math.min(100, number(value) / max * 100))}%;background:${color}"></i></div></div>`).join("")}</div></article>`;
   }
 
   function renderAccounts() {
@@ -241,15 +249,18 @@
       const button = document.querySelector("#save-partner-quote");
       const values = {
         buy_price: number(document.querySelector("#partner-buy").value), sell_price: number(document.querySelector("#partner-sell").value),
-        spread_percent: number(document.querySelector("#partner-spread").value), fee_percent: number(document.querySelector("#partner-fee").value),
-        available_usdt: number(document.querySelector("#partner-usdt").value), available_usdc: number(document.querySelector("#partner-usdc").value),
-        available_btc: number(document.querySelector("#partner-btc").value), available_idr: number(document.querySelector("#partner-idr").value),
+        available_usdt: number(document.querySelector("#partner-usdt").value), available_usd: number(document.querySelector("#partner-usd").value),
+        available_idr: number(document.querySelector("#partner-idr").value),
         note: document.querySelector("#partner-note").value.trim() || null,
       };
-      const positivePrices = values.buy_price > 0 && values.sell_price > 0;
-      const nonNegative = [values.spread_percent, values.fee_percent, values.available_usdt, values.available_usdc, values.available_btc, values.available_idr].every((value) => Number.isFinite(value) && value >= 0);
+      values.spread_percent = values.buy_price > 0 ? (values.sell_price - values.buy_price) / values.buy_price * 100 : 0;
+      // Fees are governed by Management for each approved transaction; they are
+      // not supplied by the partner desk quote.
+      values.fee_percent = 0;
+      const positivePrices = values.buy_price > 0 && values.sell_price >= values.buy_price;
+      const nonNegative = [values.available_usdt, values.available_usd, values.available_idr].every((value) => Number.isFinite(value) && value >= 0);
       if (!positivePrices || !nonNegative) {
-        status.textContent = "Enter positive buy/sell prices and non-negative fee, spread, and liquidity values.";
+        status.textContent = "Enter a positive buy price, a sell price equal to or above buy, and non-negative USD, USDT, and IDR liquidity values.";
         status.className = "partner-form-status error";
         return;
       }
@@ -272,6 +283,19 @@
         button.disabled = false;
         button.textContent = "Submit Partner Quote";
       }
+    });
+
+    document.querySelectorAll(".partner-number-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const start = input.selectionStart;
+        const raw = input.value.replace(/[^0-9.]/g, "");
+        const [whole = "", ...decimalParts] = raw.split(".");
+        const decimal = decimalParts.length ? `.${decimalParts.join("")}` : "";
+        const grouped = whole ? Number(whole).toLocaleString("en-US") : "";
+        input.value = `${grouped}${decimal}`;
+        const position = Math.max(0, Math.min(input.value.length, start + (input.value.length - raw.length)));
+        input.setSelectionRange(position, position);
+      });
     });
   }
 

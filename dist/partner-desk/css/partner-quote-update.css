@@ -1,0 +1,7 @@
+/* Current Partner Quote: values provided by a partner, not internal pricing. */
+.partner-number-input { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 680px) {
+  .partner-dashboard-card .partner-kpis { grid-template-columns: 1fr; }
+  .partner-liquidity-grid { grid-template-columns: 1fr; }
+}
