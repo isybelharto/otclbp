@@ -1,6 +1,6 @@
 (function(){ "use strict";
   function attach() {
-    const host=document.querySelector(".top-actions,.partner-top-actions,.topbar");
+    const host=document.querySelector(".topbar-actions,.top-actions,.partner-top-actions,.topbar");
     if(!host)return false;
     if(!host.querySelector("[data-password-security-link]")){
       const link=document.createElement("a");
