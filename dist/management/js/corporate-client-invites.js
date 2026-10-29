@@ -92,7 +92,9 @@
       button.innerHTML = '<i class="fi fi-rr-user-add" aria-hidden="true"></i> Invite Corporate Client';
       button.onclick = openInviteDialog;
     }
-    tabs.appendChild(button);
+    // Moving an existing child also emits a DOM mutation. Only append once so
+    // the MutationObserver does not continuously re-run on the B2B page.
+    if (!tabs.contains(button)) tabs.appendChild(button);
   }
 
   new MutationObserver(addButton).observe(document.documentElement, { childList: true, subtree: true });

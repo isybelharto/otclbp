@@ -101,5 +101,8 @@
     await loadAndDraw("queue");
   }
 
-  document.querySelectorAll(".nav[data-view='clients']").forEach((nav) => nav.addEventListener("click", () => loadAndDraw("finance")));
+  // The core Management navigation delegates B2B / Corporate Clients to this
+  // API. Keeping one renderer prevents the retired demo directory and the
+  // Supabase-backed KYB dashboard from competing for the same page container.
+  window.LBPCorporateClientApproval = { open: (tab = "finance") => loadAndDraw(tab) };
 })();
