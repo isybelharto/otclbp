@@ -75,6 +75,7 @@
           ${deskControl}
           ${isManagement ? '<a class="partner-action ghost" href="../">Management</a>' : ""}
           <button class="partner-action ghost" id="partner-sign-out" type="button">Sign out</button>
+          <button class="partner-mobile-tab-toggle" id="partner-mobile-tab-toggle" type="button" aria-label="Open workspace menu" aria-controls="partner-tabs" aria-expanded="false">☰</button>
         </div>
       </header>
       <main class="partner-page">
@@ -86,7 +87,8 @@
           </div>
           ${badge(desk.status || "Active")}
         </section>
-        <nav class="partner-tabs" aria-label="Partner Desk modules">
+        <button class="partner-tab-backdrop" id="partner-tab-backdrop" type="button" aria-label="Close workspace menu"></button>
+        <nav class="partner-tabs" id="partner-tabs" aria-label="Partner Desk modules">
           ${tabs.map(([id, label]) => `<button class="partner-tab ${activeTab === id ? "active" : ""}" type="button" data-tab="${id}" aria-selected="${activeTab === id}">${label}</button>`).join("")}
         </nav>
         <section id="partner-tab-content"></section>
@@ -95,10 +97,20 @@
     document.querySelectorAll("[data-tab]").forEach((button) => {
       button.addEventListener("click", () => {
         activeTab = button.dataset.tab;
+        document.body.classList.remove("partner-tab-menu-open");
         renderShell();
         renderActiveTab();
       });
     });
+    const mobileTabsToggle = document.querySelector("#partner-mobile-tab-toggle");
+    const mobileTabsBackdrop = document.querySelector("#partner-tab-backdrop");
+    const setMobileTabs = (open) => {
+      document.body.classList.toggle("partner-tab-menu-open", open);
+      mobileTabsToggle.setAttribute("aria-expanded", String(open));
+      mobileTabsToggle.setAttribute("aria-label", open ? "Close workspace menu" : "Open workspace menu");
+    };
+    mobileTabsToggle.addEventListener("click", () => setMobileTabs(!document.body.classList.contains("partner-tab-menu-open")));
+    mobileTabsBackdrop.addEventListener("click", () => setMobileTabs(false));
     document.querySelector("#partner-sign-out").addEventListener("click", async () => {
       await api.client.auth.signOut();
       window.location.replace("login.html");

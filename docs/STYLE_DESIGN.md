@@ -128,10 +128,18 @@ The Management header includes a `1 USD = Rp …` reference-rate component. It r
 - Wide ledgers remain horizontally scrollable rather than compressing financial values.
 - Management becomes a compact top navigation on small screens; the primary data tables retain their column integrity.
 
+### Mobile navigation and tabs
+
+- At widths of 760px and below, a horizontal tab bar must never remain a horizontally scrolling control.
+- Every module with tab navigation uses an off-canvas sidebar instead. Management uses its primary navigation drawer; Partner Desk and Corporate Client use a module-navigation drawer.
+- The drawer toggle is a three-line menu button aligned to the upper-right of the mobile header. It opens and closes the drawer; its accessible label and `aria-expanded` state must update accordingly.
+- Opening a drawer shows a dimmed backdrop, prevents background scrolling, and allows dismissal by selecting a destination, tapping the backdrop, or pressing Escape.
+- Drawer items are full-width, have a minimum 40px target height, retain the active-state treatment, and never require horizontal scrolling to reveal a destination.
+
 ## Production boundaries
 
 ### Corporate Client module
 
-The separate `dist/corporate-client/` module uses the same approved LBP logo, Manrope interface text, IBM Plex Mono financial values, blue/emerald palette, white cards and slate borders as Partner Desk. Desktop uses left navigation with onboarding and transaction tabs; mobile navigation opens from the top-left menu. Authentication and recovery screens share one institutional brand treatment. KYB uploads are grouped into nine document cards with required markers.
+The separate `dist/corporate-client/` module uses the same approved LBP logo, Manrope interface text, IBM Plex Mono financial values, blue/emerald palette, white cards and slate borders as Partner Desk. Desktop uses left navigation with onboarding and transaction tabs; on mobile this navigation is an off-canvas drawer opened from the three-line control at the upper-right. Authentication and recovery screens share one institutional brand treatment. KYB uploads are grouped into nine document cards with required markers.
 
 This implementation is a front-end operating prototype. Production use requires authenticated identity, enforced role permissions, governed market data, real compliance controls, immutable audit evidence, and approved banking/custody integrations.

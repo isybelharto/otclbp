@@ -6,6 +6,7 @@
   const el = (id) => document.getElementById(id);
   const title = el("title");
   const sidebar = el("sidebar");
+  const navBackdrop = el("nav_backdrop");
   const nav = el("nav");
   const financialReferences = el("financial_references");
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -45,12 +46,21 @@
     document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("active", button.dataset.tab === id));
     const current = tabDefs.find((item) => item[0] === id);
     title.textContent = current ? current[1] : "Corporate Client";
-    sidebar.classList.remove("open");
+    setMobileNavigation(false);
+  }
+
+  function setMobileNavigation(open) {
+    sidebar.classList.toggle("open", open);
+    document.body.classList.toggle("corporate-nav-open", open);
+    el("menu").setAttribute("aria-expanded", String(open));
+    el("menu").setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
   }
 
   nav.innerHTML = tabDefs.map(([id, name], index) => `<button data-tab="${id}" class="${index ? "" : "active"}">${name}</button>`).join("");
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => setTab(button.dataset.tab)));
-  el("menu").addEventListener("click", () => sidebar.classList.toggle("open"));
+  el("menu").addEventListener("click", () => setMobileNavigation(!sidebar.classList.contains("open")));
+  navBackdrop.addEventListener("click", () => setMobileNavigation(false));
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") setMobileNavigation(false); });
   el("signout").addEventListener("click", async () => {
     await c.auth.signOut();
     location.replace("login.html");
