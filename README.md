@@ -154,4 +154,8 @@ An internet connection is required only for external resources such as Google Fo
 
 The new Corporate Client module is under `dist/corporate-client/`. The onboarding tables, private KYB storage and registration bootstrap are active in Supabase. OTC request execution, Management review UI and end-to-end acceptance remain pending. See [Corporate Client setup and status](docs/CORPORATE_CLIENT_MODULE.md) before deployment.
 
+## Automatic VPS deployment
+
+The `.github/workflows/deploy-vps.yml` workflow deploys each push to `main` that changes `dist/`. Add these GitHub repository secrets before enabling it: `VPS_HOST`, `VPS_USER`, and `VPS_SSH_PRIVATE_KEY`. The key must be authorised for the VPS user, and that user must be allowed to reload Caddy without an interactive password. Until all three secrets are configured, the workflow is skipped safely.
+
 Before handling real funds or public users, replace all demo-only functionality with independently reviewed production services for identity, authorization, secure persistence, KYC/KYB/AML/KYT, sanctions screening, bank confirmation, wallet screening, reconciliation, audit retention, monitoring, incident response, and legal/regulatory controls.
