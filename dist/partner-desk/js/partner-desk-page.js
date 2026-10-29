@@ -72,7 +72,7 @@
     const isManagement = profile.role === "management";
     const deskControl = isManagement
       ? `<label class="partner-desk-picker"><span>Partner desk</span><select class="partner-select" id="partner-switch">${allowedDesks.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === activePartnerId ? "selected" : ""}>${escapeHtml(item.display_name)}</option>`).join("")}</select></label>`
-      : `<div class="partner-session"><span>${escapeHtml(profile.full_name || desk.operator_name || "Partner operator")}</span><strong>${escapeHtml(desk.display_name)}</strong></div>`;
+      : "";
 
     app.innerHTML = `
       <div class="partner-workspace">
