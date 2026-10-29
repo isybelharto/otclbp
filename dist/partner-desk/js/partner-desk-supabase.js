@@ -197,5 +197,59 @@
     if (auditError) console.warn("Partner quote saved, but the audit event was not recorded.", auditError);
   }
 
-  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, verifyPartnerEmailOtp, resendPartnerEmailOtp, requestPasswordReset, initialiseRecoverySession, sendRecoveryReauthenticationCode, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, text };
+  async function saveBankAccount(partnerId, values) {
+    const payload = {
+      partner_id: partnerId,
+      account_label: String(values.account_label || "").trim() || null,
+      bank_name: String(values.bank_name || "").trim(),
+      account_name: String(values.account_name || "").trim(),
+      account_number: String(values.account_number || "").trim(),
+      account_number_masked: maskSensitive(values.account_number),
+      currency: String(values.currency || "").trim().toUpperCase(),
+      bank_country: String(values.bank_country || "").trim() || null,
+      bank_address: String(values.bank_address || "").trim() || null,
+      beneficiary_address: String(values.beneficiary_address || "").trim() || null,
+      swift_bic: String(values.swift_bic || "").trim() || null,
+      iban: String(values.iban || "").trim() || null,
+      is_primary: Boolean(values.is_primary),
+      status: "pending",
+      updated_at: new Date().toISOString(),
+    };
+    if (!payload.bank_name || !payload.account_name || !payload.account_number || !/^[A-Z]{3}$/.test(payload.currency)) throw new Error("Bank, beneficiary, account number, and a three-letter currency are required.");
+    if (payload.is_primary) {
+      const { error: clearError } = await client.from("partner_desk_bank_accounts").update({ is_primary: false, updated_at: new Date().toISOString() }).eq("partner_id", partnerId).eq("is_primary", true);
+      if (clearError) throw clearError;
+    }
+    const { error } = await client.from("partner_desk_bank_accounts").insert(payload);
+    if (error) throw error;
+  }
+
+  async function saveWallet(partnerId, values) {
+    const payload = {
+      partner_id: partnerId,
+      wallet_label: String(values.wallet_label || "").trim(),
+      asset: String(values.asset || "").trim().toUpperCase(),
+      network: String(values.network || "").trim(),
+      address: String(values.address || "").trim(),
+      address_masked: maskSensitive(values.address),
+      wallet_use: String(values.wallet_use || "settlement").trim(),
+      is_primary: Boolean(values.is_primary),
+      status: "pending",
+      updated_at: new Date().toISOString(),
+    };
+    if (!payload.wallet_label || !payload.asset || !payload.network || payload.address.length < 8) throw new Error("Wallet label, asset, network, and a valid wallet address are required.");
+    if (payload.is_primary) {
+      const { error: clearError } = await client.from("partner_desk_wallets").update({ is_primary: false, updated_at: new Date().toISOString() }).eq("partner_id", partnerId).eq("is_primary", true);
+      if (clearError) throw clearError;
+    }
+    const { error } = await client.from("partner_desk_wallets").insert(payload);
+    if (error) throw error;
+  }
+
+  function maskSensitive(value) {
+    const clean = String(value || "").trim();
+    return clean.length > 8 ? `${clean.slice(0, 4)}••••${clean.slice(-4)}` : "••••";
+  }
+
+  window.LBPPartnerDeskSupabase = { client, sessionProfile, accessRequestStatus, corporateEmailError, passwordErrors, registerPartner, verifyPartnerEmailOtp, resendPartnerEmailOtp, requestPasswordReset, initialiseRecoverySession, sendRecoveryReauthenticationCode, updatePassword, listPartnerDesks, loadPartnerDesk, saveQuote, saveBankAccount, saveWallet, text };
 })();

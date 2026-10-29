@@ -127,6 +127,8 @@
     };
     target.innerHTML = renderers[activeTab]();
     if (activeTab === "dashboard") bindQuoteForm();
+    if (activeTab === "accounts") bindBankAccountForm();
+    if (activeTab === "wallets") bindWalletForm();
   }
 
   function operationalSummary() {
@@ -217,13 +219,53 @@
   }
 
   function renderAccounts() {
-    const rows = (currentRecord.accounts || []).map((row) => `<tr><td class="account-name">${escapeHtml(row.bank_name)}</td><td>${escapeHtml(row.account_name)}</td><td class="mono">${escapeHtml(row.account_number_masked)}</td><td>${escapeHtml(row.currency)}</td><td>${badge(row.status)}</td></tr>`).join("") || emptyRow(5, "No corporate settlement account has been registered.");
-    return tableCard("Corporate Settlement Accounts", "Verified corporate accounts available for controlled settlement.", ["Bank", "Account Name", "Account No.", "Currency", "Status"], rows);
+    const rows = (currentRecord.accounts || []).map((row) => `<tr><td class="account-name">${escapeHtml(row.bank_name)}</td><td>${escapeHtml(row.account_name)}</td><td class="mono">${escapeHtml(row.account_number_masked)}</td><td>${escapeHtml(row.currency)}</td><td>${escapeHtml(row.swift_bic || "—")}</td><td>${row.is_primary ? badge("Primary") : badge(row.status)}</td></tr>`).join("") || emptyRow(6, "No corporate settlement account has been registered.");
+    return `<div class="partner-split-grid"><article class="partner-card partner-tab-card"><header class="partner-card-head"><div><h2>Add Settlement Account</h2><p>Add as many corporate bank references as your desk uses. New references remain pending until LBP verification.</p></div></header><form class="partner-card-body partner-reference-form" id="partner-bank-form"><div class="partner-config-fields"><label>Reference label<input name="account_label" maxlength="80" placeholder="USD settlement account" required></label><label>Bank name<input name="bank_name" maxlength="160" required></label><label>Beneficiary name<input name="account_name" maxlength="160" required></label><label>Currency<select name="currency" class="partner-select"><option value="IDR">IDR</option><option value="USD">USD</option><option value="SGD">SGD</option><option value="EUR">EUR</option></select></label><label>Account number / IBAN<input name="account_number" maxlength="80" required></label><label>SWIFT / BIC<input name="swift_bic" maxlength="20" placeholder="Optional"></label><label>Bank country<input name="bank_country" maxlength="100" required></label><label>IBAN (if applicable)<input name="iban" maxlength="80"></label><label class="partner-wide">Bank address<input name="bank_address" maxlength="300"></label><label class="partner-wide">Beneficiary address<input name="beneficiary_address" maxlength="300"></label><label class="partner-check"><input type="checkbox" name="is_primary"> Use as primary settlement account</label></div><p class="partner-form-status" id="partner-bank-status" role="status"></p><button class="partner-config-save" type="submit">Add Bank Reference</button></form></article>${tableCard("Corporate Settlement Accounts", "References are masked in this list. Full values are available only to your authorised desk and LBP Management.", ["Bank", "Beneficiary", "Account No.", "Currency", "SWIFT / BIC", "Status"], rows)}</div>`;
   }
 
   function renderWallets() {
-    const rows = (currentRecord.wallets || []).map((row) => `<tr><td>${escapeHtml(row.asset)}</td><td>${escapeHtml(row.network)}</td><td><span class="wallet-address" title="${escapeHtml(row.address_masked)}">${escapeHtml(row.address_masked)}</span></td><td>${escapeHtml(row.wallet_use)}</td><td>${badge(row.status)}</td></tr>`).join("") || emptyRow(5, "No whitelisted crypto wallet has been registered.");
-    return tableCard("Whitelisted Crypto Wallets", "Only controlled settlement addresses associated with this partner are displayed.", ["Asset", "Network", "Wallet Address", "Use", "Status"], rows);
+    const rows = (currentRecord.wallets || []).map((row) => `<tr><td>${escapeHtml(row.asset)}</td><td>${escapeHtml(row.network)}</td><td><span class="wallet-address" title="${escapeHtml(row.address_masked)}">${escapeHtml(row.address_masked)}</span></td><td>${escapeHtml(row.wallet_use)}</td><td>${row.is_primary ? badge("Primary") : badge(row.status)}</td></tr>`).join("") || emptyRow(5, "No whitelisted crypto wallet has been registered.");
+    return `<div class="partner-split-grid"><article class="partner-card partner-tab-card"><header class="partner-card-head"><div><h2>Add Crypto Wallet</h2><p>State the asset and blockchain/network for every settlement address. New wallet references require LBP approval.</p></div></header><form class="partner-card-body partner-reference-form" id="partner-wallet-form"><div class="partner-config-fields"><label>Wallet label<input name="wallet_label" maxlength="80" placeholder="USDT operating wallet" required></label><label>Asset<select name="asset" class="partner-select"><option value="USDT">USDT</option><option value="USDC">USDC</option><option value="BTC">BTC</option><option value="ETH">ETH</option><option value="OTHER">Other</option></select></label><label>Blockchain / network<select name="network" class="partner-select"><option value="TRC20">TRC20</option><option value="ERC20">ERC20</option><option value="BEP20">BEP20</option><option value="Bitcoin">Bitcoin</option><option value="Ethereum">Ethereum</option><option value="Solana">Solana</option><option value="Other">Other</option></select></label><label>Wallet use<select name="wallet_use" class="partner-select"><option value="settlement">Settlement</option><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option><option value="treasury">Treasury</option></select></label><label class="partner-wide">Wallet address<input name="address" maxlength="160" autocomplete="off" required></label><label class="partner-check"><input type="checkbox" name="is_primary"> Use as primary settlement wallet</label></div><p class="partner-form-status" id="partner-wallet-status" role="status"></p><button class="partner-config-save" type="submit">Add Crypto Wallet</button></form></article>${tableCard("Whitelisted Crypto Wallets", "Only controlled settlement addresses associated with this partner are displayed.", ["Asset", "Network", "Wallet Address", "Use", "Status"], rows)}</div>`;
+  }
+
+  function bindBankAccountForm() {
+    const form = document.querySelector("#partner-bank-form");
+    if (!form) return;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = document.querySelector("#partner-bank-status");
+      const button = form.querySelector("button[type=submit]");
+      button.disabled = true;
+      try {
+        await api.saveBankAccount(activePartnerId, Object.fromEntries(new FormData(form)));
+        currentRecord = await api.loadPartnerDesk(activePartnerId);
+        renderActiveTab();
+      } catch (error) {
+        status.textContent = `Bank reference was not saved: ${error.message}`;
+        status.className = "partner-form-status error";
+        button.disabled = false;
+      }
+    });
+  }
+
+  function bindWalletForm() {
+    const form = document.querySelector("#partner-wallet-form");
+    if (!form) return;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = document.querySelector("#partner-wallet-status");
+      const button = form.querySelector("button[type=submit]");
+      button.disabled = true;
+      try {
+        await api.saveWallet(activePartnerId, Object.fromEntries(new FormData(form)));
+        currentRecord = await api.loadPartnerDesk(activePartnerId);
+        renderActiveTab();
+      } catch (error) {
+        status.textContent = `Crypto wallet was not saved: ${error.message}`;
+        status.className = "partner-form-status error";
+        button.disabled = false;
+      }
+    });
   }
 
   function renderFiatHistory() {
