@@ -184,8 +184,8 @@
         </header>
         <form class="partner-card-body" id="partner-quote-form">
           <div class="partner-config-fields">
-            <label>Buy Price (IDR)<input type="text" inputmode="decimal" autocomplete="off" class="partner-number-input" id="partner-buy" value="${escapeHtml(number(quote.buy_price).toLocaleString("en-US", { maximumFractionDigits: 2 }))}" required></label>
             <label>Sell Price (IDR)<input type="text" inputmode="decimal" autocomplete="off" class="partner-number-input" id="partner-sell" value="${escapeHtml(number(quote.sell_price).toLocaleString("en-US", { maximumFractionDigits: 2 }))}" required></label>
+            <label>Buy Price (IDR)<input type="text" inputmode="decimal" autocomplete="off" class="partner-number-input" id="partner-buy" value="${escapeHtml(number(quote.buy_price).toLocaleString("en-US", { maximumFractionDigits: 2 }))}" required></label>
           </div>
           <div class="partner-form-divider"><span>Available liquidity</span></div>
           <div class="partner-config-fields partner-volume-fields">
