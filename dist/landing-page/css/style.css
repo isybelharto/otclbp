@@ -105,3 +105,32 @@ html:lang(hi) .serif,html:lang(zh-CN) .serif,html:lang(ja) .serif,html:lang(ko) 
 .navigation .nav-client-cta,.navigation .nav-partner-cta{color:#fff!important}
 .navigation .nav-client-cta .icon,.navigation .nav-partner-cta .icon{color:#fff!important;fill:currentColor}
 .navigation .nav-client-cta:hover,.navigation .nav-client-cta:focus-visible,.navigation .nav-partner-cta:hover,.navigation .nav-partner-cta:focus-visible{color:#fff!important}
+
+/* Flag-based language picker, anchored at the far right of the desktop header. */
+.nav-row{justify-content:flex-start}
+.navigation{order:2;margin-left:auto}
+.language-switcher{order:3;margin-left:14px}
+.menu-toggle{order:4;margin-left:10px}
+.language-switcher select{display:none!important}
+.language-menu{position:relative}
+.language-menu-trigger,.language-menu-option{font:600 12px/1.2 var(--font)}
+.language-menu-trigger{display:flex;align-items:center;gap:9px;min-width:142px;min-height:44px;padding:8px 11px;border:1px solid #9cb2a6;border-radius:5px;background:var(--white);color:var(--ink);text-align:left}
+.language-menu-trigger>span:nth-child(2){flex:1}
+.language-chevron{font-size:18px;line-height:1;transform:translateY(-2px)}
+.language-menu.is-open .language-menu-trigger{border-color:#2d7a63;box-shadow:0 0 0 2px #abebce}
+.language-menu-list{display:none;position:absolute;right:0;z-index:50;top:calc(100% + 6px);min-width:188px;overflow:hidden;border:1px solid #b8c8bf;border-radius:6px;background:var(--white);box-shadow:0 14px 32px #102c3a26}
+.language-menu.is-open .language-menu-list{display:block}
+.language-menu-option{display:flex;width:100%;align-items:center;gap:10px;padding:10px 12px;border:0;background:var(--white);color:var(--ink);text-align:left}
+.language-menu-option:hover,.language-menu-option[aria-selected=true]{background:#e7f1ea;color:#1d6b50}
+.language-flag{position:relative;display:inline-flex;width:21px;height:14px;flex:0 0 21px;overflow:hidden;border:1px solid #102c3a22;box-shadow:0 1px 2px #102c3a20}
+.flag-id{background:linear-gradient(#e21c2b 0 50%,#fff 50%)}
+.flag-gb{background:linear-gradient(34deg,transparent 43%,#fff 43% 48%,#c81930 48% 52%,#fff 52% 57%,transparent 57%),linear-gradient(-34deg,transparent 43%,#fff 43% 48%,#c81930 48% 52%,#fff 52% 57%,transparent 57%),linear-gradient(90deg,#1e3d8f 0 40%,#fff 40% 44%,#c81930 44% 56%,#fff 56% 60%,#1e3d8f 60%),linear-gradient(#1e3d8f 0 36%,#fff 36% 42%,#c81930 42% 58%,#fff 58% 64%,#1e3d8f 64%)}
+.flag-ru{background:linear-gradient(#fff 0 33%,#1f57b7 33% 66%,#d82835 66%)}
+.flag-zh-CN{background:#de2910}.flag-zh-CN:after{content:'★';position:absolute;left:2px;top:-3px;color:#ffdf00;font-size:12px}
+.flag-hi{background:radial-gradient(circle at center,#174a97 0 15%,transparent 17%),linear-gradient(#ff9933 0 33%,#fff 33% 66%,#128807 66%)}
+.flag-ko{background:radial-gradient(circle at center,#d52545 0 31%,#1d5eae 33% 48%,#fff 50%)}
+.flag-ja{background:radial-gradient(circle at center,#bc1535 0 32%,#fff 34%)}
+.flag-fr{background:linear-gradient(90deg,#2446a8 0 33%,#fff 33% 66%,#e2333f 66%)}
+.flag-de{background:linear-gradient(#1a1a1a 0 33%,#d62b32 33% 66%,#f4c944 66%)}
+@media(max-width:1100px){.navigation{order:5;margin-left:0}.language-switcher{order:3;margin-left:auto}.menu-toggle{order:4}.language-menu-trigger{min-width:118px}}
+@media(max-width:700px){.language-menu-trigger{min-width:52px;width:52px;justify-content:center;padding:8px}.language-menu-trigger>span:nth-child(2),.language-chevron{display:none}.language-menu-list{right:0;min-width:180px}.language-menu-option{font-size:12px}}

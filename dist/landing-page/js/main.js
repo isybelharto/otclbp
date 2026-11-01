@@ -6,16 +6,34 @@ const dictionary=JSON.parse($('#locale-data')?.textContent||'{}');
 const t=text=>dictionary[text]||text;
 const languageFlags={id:'🇮🇩',en:'🇬🇧',ru:'🇷🇺','zh-CN':'🇨🇳',hi:'🇮🇳',ko:'🇰🇷',ja:'🇯🇵',fr:'🇫🇷',de:'🇩🇪'};
 document.querySelectorAll('[data-language-select]').forEach(select=>{
+ const switcher=select.closest('.language-switcher');
+ if(!switcher)return;
+ const selected=select.selectedOptions[0]||select.options[0];
+ const selectedLanguage=selected.lang||'en';
+ const menu=document.createElement('div');
+ menu.className='language-menu';
+ menu.innerHTML=`<button class="language-menu-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="language-flag flag-${selectedLanguage}" aria-hidden="true"></span><span>${selected.textContent.trim()}</span><span class="language-chevron" aria-hidden="true">⌄</span></button><div class="language-menu-list" role="listbox" aria-label="Language"></div>`;
+ const trigger=menu.querySelector('.language-menu-trigger');
+ const list=menu.querySelector('.language-menu-list');
  [...select.options].forEach(option=>{
-  const flag=languageFlags[option.lang];
-  if(flag&&!option.textContent.trim().startsWith(flag))option.textContent=flag+' '+option.textContent.trim();
+  const language=option.lang||'en';
+  const choice=document.createElement('button');
+  choice.type='button';choice.className='language-menu-option';choice.setAttribute('role','option');
+  choice.setAttribute('aria-selected',String(option===selected));
+  choice.innerHTML=`<span class="language-flag flag-${language}" aria-hidden="true"></span><span>${option.textContent.trim()}</span>`;
+  choice.addEventListener('click',()=>{
+   const destination=new URL(option.value,location.href);
+   destination.hash=location.hash;
+   location.assign(destination.href);
+  });
+  list.append(choice);
  });
- select.hidden=false;
- select.addEventListener('change',()=>{
-  const destination=new URL(select.value,location.href);
-  destination.hash=location.hash;
-  location.assign(destination.href);
- });
+ const close=()=>{menu.classList.remove('is-open');trigger.setAttribute('aria-expanded','false');};
+ trigger.addEventListener('click',()=>{const open=menu.classList.toggle('is-open');trigger.setAttribute('aria-expanded',String(open));});
+ document.addEventListener('click',event=>{if(!menu.contains(event.target))close();});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')close();});
+ select.hidden=true;
+ switcher.append(menu);
 });
 const header=$('.site-header'),menuButton=$('.menu-toggle'),navigation=$('#navigation');
 if(header&&menuButton&&navigation){
