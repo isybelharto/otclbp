@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const allowedOrigins = new Set([
-  "https://management.ptlbp.co.id",
+  "https://adm.ptlbp.co.id",
   "http://127.0.0.1:4173",
   "http://127.0.0.1:4180",
   "http://127.0.0.1:4181",
@@ -11,7 +11,7 @@ const allowedOrigins = new Set([
 const json = (body: unknown, status = 200, origin = "") => {
   const headers = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : "https://management.ptlbp.co.id",
+    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : "https://adm.ptlbp.co.id",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
@@ -73,7 +73,7 @@ Deno.serve(async (request) => {
     .maybeSingle();
   if (deskError || !desk) return json({ error: "The selected Partner Desk does not exist" }, 400, origin);
 
-  const redirectTo = "https://management.ptlbp.co.id/partner-desk/recovery.html";
+  const redirectTo = "https://adm.ptlbp.co.id/partner-desk/recovery.html";
   const { data: invite, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo,
     data: {

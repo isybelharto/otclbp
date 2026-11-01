@@ -29,7 +29,7 @@ The registration form is based on the supplied 2026 institutional registration f
 ## Required completion before rollout
 
 1. Onboarding schema and SQL role checks are complete. Verify the public registration/email flow and deploy the separate OTC request schema after its capacity checks are finalised.
-2. Add `https://management.ptlbp.co.id/corporate-client/**` to Supabase Auth allowed redirect URLs. Confirm six-digit OTP and custom SMTP delivery.
+2. Add `https://adm.ptlbp.co.id/corporate-client/**` to Supabase Auth allowed redirect URLs. Confirm six-digit OTP and custom SMTP delivery.
 3. Paste the updated shared email templates into Supabase Auth (local template edits do not update hosted Auth settings).
 4. Complete Management KYB approval/request review integration, remaining form-field parity and live remaining-capacity display, and end-to-end concurrent reservation tests.
 5. Verify all tab saves, upload ownership, recovery expiry, mobile layout, quote/fee calculations and rejection paths before GitHub/VPS rollout.
@@ -45,7 +45,7 @@ cd /opt/lbp-otc
 git pull --ff-only github main
 ```
 
-If the VPS remote is named `origin`, use `git pull --ff-only origin main` instead. In the existing `management.ptlbp.co.id` Caddy block, add this handler alongside the Partner Desk handler, before the Management fallback:
+If the VPS remote is named `origin`, use `git pull --ff-only origin main` instead. In the existing `adm.ptlbp.co.id` Caddy block, add this handler alongside the Partner Desk handler, before the Management fallback:
 
 ```caddyfile
 handle /corporate-client/* {
@@ -59,7 +59,7 @@ Then validate and reload:
 ```bash
 sudo caddy validate --config /etc/caddy/Caddyfile
 sudo systemctl reload caddy
-curl -I https://management.ptlbp.co.id/corporate-client/register.html
+curl -I https://adm.ptlbp.co.id/corporate-client/register.html
 ```
 
-Registration URL: `https://management.ptlbp.co.id/corporate-client/register.html`. The portal preserves access to onboarding when OTC execution tables are not yet installed. OTC request submission stays disabled until activated.
+Registration URL: `https://adm.ptlbp.co.id/corporate-client/register.html`. The portal preserves access to onboarding when OTC execution tables are not yet installed. OTC request submission stays disabled until activated.

@@ -14,7 +14,7 @@ files into the Management application folder.
 
 On the VPS, add the following **separate site block** to
 `/etc/caddy/Caddyfile`. Put it outside the existing
-`management.ptlbp.co.id { ... }` block.
+`adm.ptlbp.co.id { ... }` block.
 
 ```caddyfile
 http://43.134.65.107 {

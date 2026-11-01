@@ -2,7 +2,7 @@
   'use strict';
   const url = 'https://biwwfxfpcsanszxrxhyw.supabase.co';
   const key = 'sb_publishable_sB3GSSdJi477vhQAmjABnw_DT4sknEb';
-  const base = 'https://management.ptlbp.co.id/corporate-client/';
+  const base = 'https://adm.ptlbp.co.id/corporate-client/';
   const client = window.supabase.createClient(url, key, { auth: { storageKey: 'lbp-corporate-client-auth-v1', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   const companyEmail = email => {
     const value = String(email || '').trim().toLowerCase();

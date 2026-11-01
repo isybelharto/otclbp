@@ -56,8 +56,8 @@ Enable the password-changed security notification after installing the template.
 
 ## Required URL Configuration
 
-- Site URL: `https://management.ptlbp.co.id/`
-- Additional redirect URL: `https://management.ptlbp.co.id/partner-desk/**`
+- Site URL: `https://adm.ptlbp.co.id/`
+- Additional redirect URL: `https://adm.ptlbp.co.id/partner-desk/**`
 
 ## Delivery Notes
 
