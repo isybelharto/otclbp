@@ -100,3 +100,8 @@ html:lang(hi) .serif,html:lang(zh-CN) .serif,html:lang(ja) .serif,html:lang(ko) 
   .footer-disclaimer p{font-size:11px}
   .footer-bottom{font-size:10px}
 }
+
+/* Header portal CTAs must remain legible on the institutional blue surface. */
+.navigation .nav-client-cta,.navigation .nav-partner-cta{color:#fff!important}
+.navigation .nav-client-cta .icon,.navigation .nav-partner-cta .icon{color:#fff!important;fill:currentColor}
+.navigation .nav-client-cta:hover,.navigation .nav-client-cta:focus-visible,.navigation .nav-partner-cta:hover,.navigation .nav-partner-cta:focus-visible{color:#fff!important}
