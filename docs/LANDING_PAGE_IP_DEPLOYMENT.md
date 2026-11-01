@@ -12,9 +12,35 @@ files into the Management application folder.
 
 ## Caddy configuration
 
-On the VPS, add the following **separate site block** to
-`/etc/caddy/Caddyfile`. Put it outside the existing
-`adm.ptlbp.co.id { ... }` block.
+The public domain serves the landing page plus the Partner Desk and Corporate
+Client paths. Management remains isolated at `adm.ptlbp.co.id`.
+
+Replace the relevant site blocks in `/etc/caddy/Caddyfile` with:
+
+```caddyfile
+ptlbp.co.id {
+    encode zstd gzip
+
+    @publicApps path /partner-desk /partner-desk/* /corporate-client /corporate-client/* /shared/*
+    handle @publicApps {
+        root * /opt/lbp-otc/dist
+        file_server
+    }
+
+    handle {
+        root * /opt/lbp-otc/dist/landing-page
+        file_server
+    }
+}
+
+adm.ptlbp.co.id {
+    encode zstd gzip
+    root * /opt/lbp-otc/dist/management
+    file_server
+}
+```
+
+The IP preview remains a separate HTTP-only block:
 
 ```caddyfile
 http://43.134.65.107 {
@@ -42,7 +68,6 @@ http://43.134.65.107/
 
 - An IP address does not receive a standard public TLS certificate, so this
   endpoint intentionally uses `http://`.
-- The landing page canonical URLs remain `https://ptlbp.co.id/`; this protects
-  the production domain's search and sharing metadata.
-- When the domain is ready to point to this VPS, add a normal Caddy domain
-  block for `ptlbp.co.id` using the same `root` path to enable automatic HTTPS.
+- `https://ptlbp.co.id/partner-desk/` serves Partner Desk.
+- `https://ptlbp.co.id/corporate-client/` serves Corporate Client.
+- `https://adm.ptlbp.co.id/` serves Management.

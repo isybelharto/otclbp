@@ -3,7 +3,7 @@
 
   const url = "https://biwwfxfpcsanszxrxhyw.supabase.co";
   const publishableKey = "sb_publishable_sB3GSSdJi477vhQAmjABnw_DT4sknEb";
-  const productionPartnerUrl = "https://adm.ptlbp.co.id/partner-desk/";
+  const productionPartnerUrl = "https://ptlbp.co.id/partner-desk/";
   const client = window.supabase.createClient(url, publishableKey, {
     auth: {
       storageKey: "lbp-partner-desk-auth-v1",
