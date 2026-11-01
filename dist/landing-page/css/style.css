@@ -74,3 +74,29 @@ html:lang(hi) .serif,html:lang(zh-CN) .serif,html:lang(ja) .serif,html:lang(ko) 
 .hero-minimum strong{white-space:nowrap}.hero-minimum>div{flex-shrink:0}.hero-minimum p{min-width:0;overflow-wrap:break-word}
 @media(max-width:700px){.brand img{width:162px}}
 @media(max-width:370px){.brand img{width:134px}.language-switcher select{width:84px}}
+
+/* Footer scale: increase institutional readability without changing the four-column structure. */
+@media(min-width:701px){
+  .footer{padding-top:86px}
+  .footer-top{gap:68px;padding-bottom:68px}
+  .footer-top .brand img{width:309px;height:auto}
+  .footer-prompt{font-size:35px;line-height:1.22}
+  .footer-email{font-size:18px;gap:38px;margin-top:23px}
+  .footer-email .icon{width:22px;height:22px}
+  .footer-grid{gap:60px;padding:48px 0 57px}
+  .footer-grid .label{font-size:12px;margin-bottom:22px}
+  .footer-grid p,.footer-grid a{font-size:16px;line-height:1.8}
+  .footer-grid a{margin-bottom:10px}
+  .footer-grid p.muted{font-size:14px}
+  .footer-disclaimer p{font-size:13px;line-height:1.9}
+  .footer-bottom{padding:29px 0 36px;font-size:12px}
+}
+@media(max-width:700px){
+  .footer-top .brand img{width:215px;height:auto}
+  .footer-prompt{font-size:30px;line-height:1.25}
+  .footer-email{font-size:15px}
+  .footer-grid .label{font-size:10px}
+  .footer-grid p,.footer-grid a{font-size:13px}
+  .footer-disclaimer p{font-size:11px}
+  .footer-bottom{font-size:10px}
+}
