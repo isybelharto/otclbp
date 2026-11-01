@@ -1,20 +1,21 @@
-name: Deploy management portal to VPS
+name: Deploy LBP portals to VPS
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'dist/**'
-      - '.github/workflows/deploy-vps.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
-    # The job stays safely skipped until the three deployment secrets exist.
+    # The job is skipped safely until all deployment secrets are configured.
     if: ${{ secrets.VPS_HOST != '' && secrets.VPS_USER != '' && secrets.VPS_SSH_PRIVATE_KEY != '' }}
     runs-on: ubuntu-latest
+
     steps:
-      - name: Configure SSH
+      - name: Configure secure SSH access
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
@@ -24,7 +25,7 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
 
-      - name: Update static portal and reload Caddy
+      - name: Update LBP portals and reload Caddy
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
