@@ -4,7 +4,12 @@ const institutionalTheme=document.createElement('link');institutionalTheme.rel='
 const $=selector=>document.querySelector(selector);
 const dictionary=JSON.parse($('#locale-data')?.textContent||'{}');
 const t=text=>dictionary[text]||text;
+const languageFlags={id:'🇮🇩',en:'🇬🇧',ru:'🇷🇺','zh-CN':'🇨🇳',hi:'🇮🇳',ko:'🇰🇷',ja:'🇯🇵',fr:'🇫🇷',de:'🇩🇪'};
 document.querySelectorAll('[data-language-select]').forEach(select=>{
+ [...select.options].forEach(option=>{
+  const flag=languageFlags[option.lang];
+  if(flag&&!option.textContent.trim().startsWith(flag))option.textContent=flag+' '+option.textContent.trim();
+ });
  select.hidden=false;
  select.addEventListener('change',()=>{
   const destination=new URL(select.value,location.href);

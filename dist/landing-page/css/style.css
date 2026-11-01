@@ -10,7 +10,7 @@
 /* Language selector: native keyboard/touch control, available on every page. */
 .language-switcher{display:flex;align-items:center;gap:7px;flex-shrink:0;margin-left:auto;color:var(--ink)}
 .language-globe{font-size:22px;line-height:1}
-.language-switcher select{width:124px;min-height:42px;border:1px solid #9cb2a6;border-radius:5px;background:var(--white);padding:8px 10px;font-size:12px;cursor:pointer}
+.language-switcher select{width:142px;min-height:42px;border:1px solid #9cb2a6;border-radius:5px;background:var(--white);padding:8px 10px;font-size:12px;cursor:pointer}
 .language-fallback{position:relative;font-size:12px}.language-fallback summary{cursor:pointer;padding:8px;border:1px solid #9cb2a6;border-radius:4px}
 .language-fallback>div{position:absolute;z-index:40;top:100%;right:0;min-width:165px;padding:10px;background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 30px #102c3a20}
 .language-fallback a{display:block;padding:9px;color:var(--ink)}.language-fallback a[aria-current]{font-weight:700;background:#d9eddf}
@@ -43,8 +43,8 @@ html:lang(hi) .serif,html:lang(zh-CN) .serif,html:lang(ja) .serif,html:lang(ko) 
 @media print{.language-switcher{display:none!important}}
 
 /* Partner Desk registration entry point. */
-.nav-partner-cta{background:transparent;color:var(--navy);border-color:#6f8b7e;gap:12px}
-.nav-partner-cta:hover{background:#e5ede6;color:var(--navy);border-color:#416c5b}
+.nav-client-cta,.nav-partner-cta{background:#2946b8;color:#fff;border-color:#2946b8;gap:12px}
+.nav-client-cta:hover,.nav-partner-cta:hover{background:#1f399a;color:#fff;border-color:#1f399a}
 .nav-partner-cta .icon{width:16px;height:16px}
 @media(max-width:1100px){.navigation .nav-partner-cta{margin-left:0}}
 @media(max-width:700px){.navigation .nav-partner-cta,.navigation .nav-cta{width:100%;margin-left:0}}
@@ -60,7 +60,7 @@ html:lang(hi) .serif,html:lang(zh-CN) .serif,html:lang(ja) .serif,html:lang(ko) 
 .partner-register-button{margin-top:28px}
 .corporate-invitation{padding-top:0}
 .corporate-invitation-panel{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:70px;align-items:center;padding:56px 60px;border:1px solid #b8c6eb;background:linear-gradient(135deg,#f4f7ff,#e7efff);color:var(--navy);border-radius:14px;box-shadow:0 24px 60px #0c233012}
-.corporate-invitation-copy{position:relative;z-index:1}.corporate-invitation .eyebrow{margin-bottom:18px;color:#234fc3}.corporate-invitation h2{max-width:16ch;font-size:clamp(34px,3.5vw,52px);letter-spacing:-.05em}.corporate-invitation-copy>p:not(.partner-registration-note){max-width:62ch;margin-top:22px;color:#50627d;font-size:13px;line-height:1.85}.corporate-invitation .partner-registration-note{color:#50627d}.corporate-invitation .partner-capability{background:#fff;border-color:#c9d6f2;color:var(--navy)}.corporate-invitation .partner-capability span{background:#dce8ff;color:#234fc3}.corporate-actions{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}.corporate-actions .button{margin:0}.nav-client-cta{background:#eef3ff;color:#234fc3;border-color:#b8c6eb;gap:10px}.nav-client-cta:hover{background:#dce8ff;color:var(--navy);border-color:#7493dc}.nav-client-cta .icon{width:16px;height:16px}
+.corporate-invitation-copy{position:relative;z-index:1}.corporate-invitation .eyebrow{margin-bottom:18px;color:#234fc3}.corporate-invitation h2{max-width:16ch;font-size:clamp(34px,3.5vw,52px);letter-spacing:-.05em}.corporate-invitation-copy>p:not(.partner-registration-note){max-width:62ch;margin-top:22px;color:#50627d;font-size:13px;line-height:1.85}.corporate-invitation .partner-registration-note{color:#50627d}.corporate-invitation .partner-capability{background:#fff;border-color:#c9d6f2;color:var(--navy)}.corporate-invitation .partner-capability span{background:#dce8ff;color:#234fc3}.corporate-actions{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}.corporate-actions .button{margin:0}.nav-client-cta .icon{width:16px;height:16px}
 .partner-registration-note{max-width:66ch;margin-top:16px;color:#9fb8b6;font-family:var(--mono);font-size:9px;line-height:1.7}
 .partner-capabilities{position:relative;z-index:1;display:grid;gap:12px}
 .partner-capability{display:flex;align-items:center;gap:16px;min-height:68px;padding:16px 18px;border:1px solid #88afa54d;background:#ffffff0b;border-radius:8px}
