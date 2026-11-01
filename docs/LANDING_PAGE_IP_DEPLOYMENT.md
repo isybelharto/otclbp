@@ -35,8 +35,17 @@ ptlbp.co.id {
 
 adm.ptlbp.co.id {
     encode zstd gzip
-    root * /opt/lbp-otc/dist/management
-    file_server
+
+    @managementShared path /shared/*
+    handle @managementShared {
+        root * /opt/lbp-otc/dist
+        file_server
+    }
+
+    handle {
+        root * /opt/lbp-otc/dist/management
+        file_server
+    }
 }
 ```
 
